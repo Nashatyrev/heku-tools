@@ -1,0 +1,71 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id 'java'
+}
+
+group 'tech.pegasys.heku'
+version '1.0-SNAPSHOT'
+
+allprojects {
+
+    apply plugin: "java"
+    apply plugin: "kotlin"
+    apply plugin: "application"
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://artifacts.consensys.net/public/maven/maven/" }
+        maven { url "https://dl.cloudsmith.io/public/libp2p/jvm-libp2p/maven/" }
+        maven { url "https://hyperledger.jfrog.io/artifactory/besu-maven/" }
+        maven { url "https://artifacts.consensys.net/public/teku/maven/" }
+        maven { url "https://mvnrepository.com/" }
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = ["-Xjvm-default=enable", "-Xopt-in=kotlin.RequiresOptIn"]
+    }
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+
+    dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib"
+        implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.1'
+        implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.1'
+
+        implementation 'org.apache.tuweni:tuweni-bytes:2.3.0'
+
+        implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+        implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3'
+
+        implementation 'org.xerial.snappy:snappy-java:1.1.8.4'
+        implementation 'com.googlecode.protobuf-java-format:protobuf-java-format:1.4'
+
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+        testImplementation 'org.assertj:assertj-core:3.22.0'
+
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+}
+
+//ext.javaMainClass = "tech.pegasys.heku.util.gradle.DefaultMainKt"
+//
+//if (project.hasProperty("mainClass")) {
+//    ext.javaMainClass = project.getProperty("mainClass")
+//}
+//
+//application {
+//    mainClassName = javaMainClass
+//    applicationDefaultJvmArgs = ['-Xmx12G', '-XX:+HeapDumpOnOutOfMemoryError']
+//
+//    if ( project.hasProperty('jvmArgs') ) {
+//        applicationDefaultJvmArgs = applicationDefaultJvmArgs + project.jvmArgs.split('\\s+').toList()
+//    }
+//}
