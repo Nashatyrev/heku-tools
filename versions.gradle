@@ -1,0 +1,20 @@
+dependencyManagement {
+    dependencies {
+
+        dependency 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.1'
+        dependency 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.1'
+
+        dependency 'org.apache.tuweni:tuweni-bytes:2.3.0'
+
+        dependency 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+        dependency 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3'
+
+        dependency 'org.xerial.snappy:snappy-java:1.1.8.4'
+        dependency 'com.googlecode.protobuf-java-format:protobuf-java-format:1.4'
+
+        dependency 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+        dependency 'org.assertj:assertj-core:3.22.0'
+
+        dependency 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    }
+}
