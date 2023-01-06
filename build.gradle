@@ -38,14 +38,6 @@ allprojects {
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive'
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8'
 
-        implementation 'org.apache.tuweni:tuweni-bytes'
-
-        implementation 'com.fasterxml.jackson.core:jackson-databind'
-        implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-
-        implementation 'org.xerial.snappy:snappy-java'
-        implementation 'com.googlecode.protobuf-java-format:protobuf-java-format'
-
         testImplementation 'org.junit.jupiter:junit-jupiter-api'
         testImplementation 'org.assertj:assertj-core'
 
