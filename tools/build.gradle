@@ -1,8 +1,8 @@
 dependencies {
-    implementation 'org.apache.tuweni:tuweni-bytes'
+    api 'org.apache.tuweni:tuweni-bytes'
 
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.module:jackson-module-kotlin'
 
     implementation 'org.xerial.snappy:snappy-java'
     implementation 'com.googlecode.protobuf-java-format:protobuf-java-format'
