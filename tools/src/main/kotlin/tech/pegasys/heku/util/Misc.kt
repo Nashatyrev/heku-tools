@@ -1,11 +1,7 @@
 package tech.pegasys.heku.util
 
 import kotlinx.coroutines.CancellationException
-import org.apache.tuweni.bytes.Bytes
-import java.net.InetAddress
-import java.net.NetworkInterface
 import java.nio.channels.ClosedChannelException
-import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.CompletionException
@@ -39,12 +35,6 @@ fun Throwable.toStringCompact(): String {
                 simpleName
         }
     }.joinToString("<-")
-}
-
-val MAC_SEED_BYTES = run {
-    val localHost = InetAddress.getLocalHost()
-    val ni = NetworkInterface.getByInetAddress(localHost)
-    ni.hardwareAddress
 }
 
 fun setDefaultExceptionHandler() {
