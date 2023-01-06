@@ -26,7 +26,7 @@ import kotlin.time.measureTime
 
 class IncSszStateLoader(
     val eth2Network: Eth2Network = Eth2Network.MAINNET,
-    val dbPath: String = "./work.dir/incssz.dump.$eth2Network/inc.state.db.tst",
+    val dbPath: String = "./work.dir/incssz.dump.$eth2Network/inc.state.db",
     val startStateEpoch: Epoch =
         eth2Network.spec().getInstantSpecAtMilestone(SpecMilestone.ALTAIR).slot.asSlot().epoch + 1
 ) : StateLoader {
@@ -60,7 +60,7 @@ class IncSszStateLoader(
     }
 }
 
-fun main() {
+fun main1() {
     val stateLoader = IncSszStateLoader(dbPath = "./work.dir/incssz.dump.MAINNET/inc.state.db")
     val epoch = 131073.epochs
     runBlocking {
@@ -76,25 +76,28 @@ fun main() {
     }
 }
 
-fun main1() {
+fun main() {
     val stateLoader = IncSszStateLoader()
 
     println("States stored: ${stateLoader.firstEpoch}..${stateLoader.lastEpoch}")
 
 //    runBlocking {
 //        for (epoch in stateLoader.firstEpoch..stateLoader.lastEpoch) {
+//        for (epoch in 131072.epochs..stateLoader.lastEpoch) {
 //            val t = measureTime {
 //                stateLoader.loadState(epoch.startSlot)
 //            }
 //
-//            log("Loaded state @ $epoch in $t")
+//            log("Loaded state @ $epoch in ${t.inWholeMilliseconds}")
 //        }
 //    }
 
     runBlocking {
         while (true) {
             val t = measureTime {
-                stateLoader.loadState(74952.epochs.startSlot)
+//                stateLoader.loadState(74241.epochs.startSlot)
+//                stateLoader.loadState(131120.epochs.startSlot)
+                stateLoader.loadState(131121.epochs.startSlot)
             }
 
             log("Loaded state in $t")

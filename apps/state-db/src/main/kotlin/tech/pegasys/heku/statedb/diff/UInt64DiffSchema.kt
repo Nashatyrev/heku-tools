@@ -1,7 +1,6 @@
 package tech.pegasys.heku.statedb.diff
 
 import io.libp2p.etc.types.toBytesBigEndian
-import io.libp2p.etc.types.toLongBigEndian
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.MutableBytes
 import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
@@ -16,7 +15,7 @@ class UInt64DiffSchema : DiffSchema {
         val oldOffset: Int,
         val oldSize: Int,
         val newOffset: Int,
-        val diffs: List<Long>
+        val diffs: LongArray
     ) : Diff {
 
         override fun serialize(): Bytes {
@@ -34,7 +33,7 @@ class UInt64DiffSchema : DiffSchema {
 
         class UInt64DiffResult(
             val offsset: Int,
-            val values: List<Long>
+            val values: LongArray
         ) : DiffResult {
 
             override fun getBytes(): SparseBytes {
@@ -46,22 +45,25 @@ class UInt64DiffSchema : DiffSchema {
             }
 
             companion object {
-                fun fromBytes(ofset: Int, bb: Bytes) = UInt64DiffResult(ofset, bb.toUInt64List())
+                fun fromBytes(ofset: Int, bb: Bytes) = UInt64DiffResult(ofset, bb.toLongArray())
             }
         }
 
         override fun apply(parentSsz: DiffResult): DiffResult {
             val oldResult = parentSsz as? UInt64DiffResult
                 ?: UInt64DiffResult.fromBytes(oldOffset, parentSsz.getBytes().sliceDense(oldOffset, oldSize))
-            val oldVals = oldResult.values.zeroPadTrailing(diffs.size)
-            val newValues = oldVals.zip(diffs) { o, n -> o + n }
+            val newValues = LongArray(diffs.size)
+            for (i in newValues.indices) {
+                val oldVal = if (i < oldResult.values.size) oldResult.values[i] else 0L
+                newValues[i] = oldVal + diffs[i]
+            }
             return UInt64DiffResult(newOffset, newValues)
         }
     }
 
     override fun diff(indexedSszDiff: AlignedIndexedSsz): Diff {
-        val oldVals = indexedSszDiff.alignedSlices.map { it.oldSlice.sszBytes }.concat().toUInt64List()
-        val newVals = indexedSszDiff.alignedSlices.map { it.newSlice.sszBytes }.concat().toUInt64List()
+        val oldVals = indexedSszDiff.alignedSlices.map { it.oldSlice.sszBytes }.concat().toLongArray().toList()
+        val newVals = indexedSszDiff.alignedSlices.map { it.newSlice.sszBytes }.concat().toLongArray().toList()
         require(newVals.size >= oldVals.size) { "List shrinking is not yet supported" }
         val paddedOldVals = oldVals.zeroPadTrailing(newVals.size)
         val diffs = paddedOldVals.zip(newVals) { old, new ->
@@ -71,7 +73,7 @@ class UInt64DiffSchema : DiffSchema {
             indexedSszDiff.oldOffset,
             indexedSszDiff.oldSize,
             indexedSszDiff.newOffset,
-            diffs
+            diffs.toLongArray()
         )
     }
 
@@ -81,14 +83,30 @@ class UInt64DiffSchema : DiffSchema {
         val oldSize = reader.readInt()
         val newOffset = reader.readInt()
         val diffBytes = reader.readBytes()
-        val diffs = (0 until diffBytes.size() step 8)
-            .map {
-                diffBytes.slice(it, 8).toArrayUnsafe().toLongBigEndian()
-            }
+        val diffs = LongArray(diffBytes.size() / 8)
+        for (i in diffs.indices) {
+            diffs[i] = getLongBigEndian(diffBytes, i * 8)
+        }
+//        val diffs = (0 until diffBytes.size() step 8)
+//            .map {
+//                diffBytes.slice(it, 8).toArrayUnsafe().toLongBigEndian()
+//            }
         return UInt64Diff(oldOffset, oldSize, newOffset, diffs)
     }
 
     companion object {
+
+        private fun getLongBigEndian(arr: Bytes, off: Int): Long {
+            return (arr[off + 0].toLong() and 0xFF shl 56) or
+                    (arr[off + 1].toLong() and 0xFF shl 48) or
+                    (arr[off + 2].toLong() and 0xFF shl 40) or
+                    (arr[off + 3].toLong() and 0xFF shl 32) or
+                    (arr[off + 4].toLong() and 0xFF shl 24) or
+                    (arr[off + 5].toLong() and 0xFF shl 16) or
+                    (arr[off + 6].toLong() and 0xFF shl 8) or
+                    (arr[off + 7].toLong() and 0xFF)
+
+        }
 
         private fun MutableBytes.setLongLittleEndian(off: Int, l: Long) {
             this.set(off, (l and 0xFF).toByte())
@@ -101,9 +119,13 @@ class UInt64DiffSchema : DiffSchema {
             this.set(off + 7, ((l shr 56) and 0xFF).toByte())
         }
 
-        private fun Bytes.toUInt64List(): List<Long> =
-            (0 until this.size() step  8)
-                .map { this.getLong(it, ByteOrder.LITTLE_ENDIAN) }
+        private fun Bytes.toLongArray(): LongArray {
+            val ret = LongArray(this.size() / 8)
+            for (i in ret.indices) {
+                ret[i] = this.getLong(i, ByteOrder.LITTLE_ENDIAN)
+            }
+            return ret
+        }
 
         private fun List<Long>.zeroPadTrailing(targetSize: Int) =
             this + List(targetSize - this.size) { 0L }

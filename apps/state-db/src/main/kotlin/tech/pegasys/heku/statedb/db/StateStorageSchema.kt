@@ -26,9 +26,10 @@ class StateStorageSchema(
         val eearSchema = newHierarchicalSchema {
             asRootSchema()
             diffSchema = SnapshotDiffSchema()
-                .gzipped()
+                .snappied()
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EEAR.epochs)
 //            cacheSize = 1
+            name = "eearSchema"
         }
 
         val eonthSchema = newHierarchicalSchema {
@@ -36,6 +37,7 @@ class StateStorageSchema(
             parentSchema = eearSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EONTH.epochs)
 //            cacheSize = 1
+            name = "eonthSchema"
         }
 
         val eekSchema = newHierarchicalSchema {
@@ -43,6 +45,7 @@ class StateStorageSchema(
             parentSchema = eonthSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EEK.epochs)
 //            cacheSize = 1
+            name = "eekSchema"
         }
 
         val eaySchema = newHierarchicalSchema {
@@ -50,6 +53,7 @@ class StateStorageSchema(
             parentSchema = eekSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EAY.epochs)
 //            cacheSize = 1
+            name = "eaySchema"
         }
 
         val balancesFieldSelector = GIndexSelector.beaconStateFieldSelector(SpecMilestone.ALTAIR, "balances")
@@ -70,6 +74,7 @@ class StateStorageSchema(
             parentSchema = eaySchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(64.epochs)
 //            cacheSize = 1
+            name = "epochX64Schema"
         }
 
         val epochX16Schema = newHierarchicalSchema {
@@ -77,6 +82,7 @@ class StateStorageSchema(
             parentSchema = epochX64Schema
             stateIdCalculator = StateIdCalculator.everyNEpochs(16.epochs)
 //            cacheSize = 1
+            name = "epochX16Schema"
         }
 
 
@@ -89,6 +95,7 @@ class StateStorageSchema(
                     .gzipped()
                 parentSchema = epochX16Schema
                 stateIdCalculator = StateIdCalculator.everyNEpochs(1.epochs)
+                name = "epochX1RestSchema"
             }
 
             addHierarchicalSchema {
@@ -99,6 +106,7 @@ class StateStorageSchema(
                 sameSchemaUntilParent { StateId(it.slot - 1.epochs) }
                 stateIdCalculator = StateIdCalculator.everyNEpochs(1.epochs)
 //                cacheSize = 16
+                name = "epochX1BalancesSchema"
             }
         }
     }
