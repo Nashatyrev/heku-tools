@@ -3,8 +3,6 @@ package tech.pegasys.heku.statedb.schema
 import tech.pegasys.heku.statedb.diff.DiffResult
 import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
 import tech.pegasys.heku.util.collections.SparseBytes
-import tech.pegasys.heku.util.ext.max
-import tech.pegasys.heku.util.type.Epoch
 import tech.pegasys.heku.util.type.Slot
 
 data class StateId(
@@ -31,8 +29,6 @@ data class DagSchemaVertex(
 }
 
 interface DagSchema : AbstractSchema {
-
-//    val schemaStateIdCalculator: StateIdCalculator
 
     fun getParents(stateId: StateId): List<DagSchemaVertex>
 

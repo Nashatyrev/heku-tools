@@ -1,19 +1,15 @@
 package tech.pegasys.heku.statedb.legacy
 
 import kotlinx.coroutines.runBlocking
-import tech.pegasys.heku.statedb.FileEpochStateLoader
-import tech.pegasys.heku.util.ext.writeBytesT
+import tech.pegasys.heku.statedb.runner.FileEpochStateLoader
 import tech.pegasys.heku.util.ext.writeBytesGzipped
+import tech.pegasys.heku.util.ext.writeBytesT
 import tech.pegasys.heku.util.log
 import tech.pegasys.heku.util.type.Epoch
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.teku.infrastructure.ssz.SszData
 import tech.pegasys.teku.infrastructure.ssz.primitive.SszUInt64
-import tech.pegasys.teku.infrastructure.ssz.tree.BranchNode
-import tech.pegasys.teku.infrastructure.ssz.tree.LeafDataNode
-import tech.pegasys.teku.infrastructure.ssz.tree.SszSuperNode
-import tech.pegasys.teku.infrastructure.ssz.tree.TreeNode
-import tech.pegasys.teku.infrastructure.ssz.tree.TreeUtil
+import tech.pegasys.teku.infrastructure.ssz.tree.*
 import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconState
 import tech.pegasys.teku.spec.networks.Eth2Network

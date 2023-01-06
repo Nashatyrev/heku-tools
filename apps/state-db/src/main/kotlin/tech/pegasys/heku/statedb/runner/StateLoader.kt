@@ -1,4 +1,4 @@
-package tech.pegasys.heku.statedb
+package tech.pegasys.heku.statedb.runner
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
@@ -12,13 +12,11 @@ import tech.pegasys.heku.util.type.Epoch
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.teku.TekuFacade
 import tech.pegasys.teku.config.TekuConfiguration
-import tech.pegasys.teku.infrastructure.io.resource.ResourceLoader
 import tech.pegasys.teku.infrastructure.ssz.sos.SimpleSszReader
 import tech.pegasys.teku.spec.Spec
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconState
 import tech.pegasys.teku.spec.networks.Eth2Network
 import java.io.File
-import java.io.FileNotFoundException
 import java.net.URI
 import java.nio.file.Path
 

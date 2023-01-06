@@ -1,4 +1,4 @@
-package tech.pegasys.heku.statedb.diff
+package tech.pegasys.heku.statedb.ssz
 
 import tech.pegasys.heku.util.beacon.spec
 import tech.pegasys.teku.infrastructure.ssz.schema.SszContainerSchema

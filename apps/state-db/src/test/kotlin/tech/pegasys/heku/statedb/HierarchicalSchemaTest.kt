@@ -12,9 +12,7 @@ import tech.pegasys.heku.statedb.db.MemDiffStore
 import tech.pegasys.heku.statedb.diff.*
 import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
 import tech.pegasys.heku.statedb.schema.*
-import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
-import tech.pegasys.heku.statedb.ssz.IndexedSsz
-import tech.pegasys.heku.statedb.ssz.IndexedSszSource
+import tech.pegasys.heku.statedb.ssz.*
 import tech.pegasys.heku.util.collections.asSparseBytes
 import tech.pegasys.heku.util.type.slots
 

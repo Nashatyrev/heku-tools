@@ -1,11 +1,9 @@
 package tech.pegasys.heku.statedb.schema
 
 import tech.pegasys.heku.statedb.db.DiffStoreFactory
-import tech.pegasys.heku.statedb.diff.*
+import tech.pegasys.heku.statedb.diff.DiffSchema
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.type.Slot
-import tech.pegasys.heku.util.type.epochs
-import tech.pegasys.teku.spec.SpecMilestone
 
 typealias ParentSelector = (thisSchema: DagSchema, stateId: StateId) -> DagSchemaVertex?
 

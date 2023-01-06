@@ -1,13 +1,13 @@
 package tech.pegasys.heku.statedb.schema
 
-import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
-import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.db.DiffId
 import tech.pegasys.heku.statedb.db.DiffStore
 import tech.pegasys.heku.statedb.diff.Diff
 import tech.pegasys.heku.statedb.diff.DiffResult
 import tech.pegasys.heku.statedb.diff.DiffSchema
 import tech.pegasys.heku.statedb.schema.DagSchema.Companion.loadOrEmpty
+import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
+import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.ext.getOrCompute
 import tech.pegasys.teku.infrastructure.collections.LimitedMap

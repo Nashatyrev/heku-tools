@@ -1,7 +1,7 @@
 package tech.pegasys.heku.statedb.ssz
 
 import kotlinx.coroutines.runBlocking
-import tech.pegasys.heku.statedb.StateLoader
+import tech.pegasys.heku.statedb.runner.StateLoader
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.util.ext.getOrCompute
 import tech.pegasys.teku.infrastructure.collections.LimitedMap

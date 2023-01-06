@@ -2,7 +2,7 @@ package tech.pegasys.heku.statedb.runner
 
 import kotlinx.coroutines.runBlocking
 import tech.pegasys.heku.statedb.db.*
-import tech.pegasys.heku.statedb.schema.*
+import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.beacon.spec
 import tech.pegasys.heku.util.type.Epoch

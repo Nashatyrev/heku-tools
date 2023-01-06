@@ -5,7 +5,6 @@ import io.libp2p.etc.types.toLongBigEndian
 import org.apache.tuweni.bytes.Bytes
 import org.apache.tuweni.bytes.MutableBytes
 import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
-import tech.pegasys.heku.statedb.SimpleBytesCodec
 import tech.pegasys.heku.util.collections.SparseBytes
 import tech.pegasys.heku.util.ext.concat
 import tech.pegasys.heku.util.ext.toBytes

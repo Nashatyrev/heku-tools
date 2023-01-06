@@ -1,9 +1,8 @@
 package tech.pegasys.heku.statedb.diff
 
 import org.apache.tuweni.bytes.Bytes
-import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
-import tech.pegasys.heku.statedb.SimpleBytesCodec
 import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
+import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
 import tech.pegasys.heku.util.collections.asSparseBytes
 import tech.pegasys.heku.util.ext.concat
 import tech.pegasys.heku.util.ext.sliceSafe

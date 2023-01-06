@@ -1,4 +1,4 @@
-package tech.pegasys.heku.statedb
+package tech.pegasys.heku.statedb.diff
 
 import org.apache.tuweni.bytes.Bytes
 import tech.pegasys.heku.util.ext.fromUVariantBytes
