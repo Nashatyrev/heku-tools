@@ -2,4 +2,5 @@ rootProject.name = 'heku-tools'
 
 include 'tools'
 include 'tools-eth'
+include 'apps:state-db'
 
