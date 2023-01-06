@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tech.pegasys.heku.statedb.ssz.SszPath
 import tech.pegasys.heku.statedb.diff.*
+import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
 import tech.pegasys.heku.statedb.ssz.AlignedIndexedSsz
 import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.util.ReadableSize

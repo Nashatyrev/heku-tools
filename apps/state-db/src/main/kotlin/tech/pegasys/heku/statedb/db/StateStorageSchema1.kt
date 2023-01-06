@@ -2,6 +2,7 @@ package tech.pegasys.heku.statedb.db
 
 import tech.pegasys.heku.statedb.diff.*
 import tech.pegasys.heku.statedb.schema.*
+import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.type.ETime
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.heku.util.type.epochs

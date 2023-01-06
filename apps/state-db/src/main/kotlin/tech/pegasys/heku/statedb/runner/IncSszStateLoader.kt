@@ -5,7 +5,7 @@ package tech.pegasys.heku.statedb.runner
 import kotlinx.coroutines.runBlocking
 import tech.pegasys.heku.statedb.StateLoader
 import tech.pegasys.heku.statedb.db.*
-import tech.pegasys.heku.statedb.schema.IndexedSszSource
+import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.util.beacon.spec
 import tech.pegasys.heku.util.ext.writeBytesT
@@ -22,7 +22,6 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
-import kotlin.time.measureTimedValue
 
 class IncSszStateLoader(
     val eth2Network: Eth2Network = Eth2Network.MAINNET,

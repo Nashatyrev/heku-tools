@@ -1,8 +1,7 @@
 package tech.pegasys.heku.statedb.schema
 
 import tech.pegasys.heku.statedb.diff.DiffResult
-import tech.pegasys.heku.statedb.diff.toDiffResult
-import tech.pegasys.heku.util.collections.SparseBytes
+import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
 import tech.pegasys.heku.util.collections.mergeNoOverlap
 
 open class MergeSchema(

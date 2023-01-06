@@ -11,16 +11,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
-data class AlignedIndexedSlice(
-    val gIndex: Long,
-    val oldSlice: IndexedSsz.Slice,
-    val newSlice: IndexedSsz.Slice
-) {
-
-    companion object {
-    }
-}
-
 class IndexedSsz(
     val slices: List<IndexedSlice>
 ) {
@@ -31,20 +21,11 @@ class IndexedSsz(
         assert(isDense())
     }
 
-    data class Slice(
-        val sszOffset: Int,
-        val sszBytes: Bytes
-    ) {
-        val sszEndOffset get() = sszOffset + sszBytes.size()
-    }
-
     data class IndexedSlice(
         val gIndex: Long,
         val sszOffset: Int,
         val sszBytes: Bytes
-    ) {
-        val slice get() = Slice(sszOffset, sszBytes)
-    }
+    )
 
     private fun isDense() =
         slices

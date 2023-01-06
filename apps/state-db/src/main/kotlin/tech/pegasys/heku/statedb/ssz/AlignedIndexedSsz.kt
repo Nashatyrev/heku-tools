@@ -7,8 +7,21 @@ import tech.pegasys.teku.infrastructure.ssz.schema.SszSchema
 import tech.pegasys.teku.infrastructure.ssz.tree.TreeNode
 
 class AlignedIndexedSsz(
-    val alignedSlices: List<AlignedIndexedSlice>
+    val alignedSlices: List<AlignedSlice>
 ) {
+
+    data class Slice(
+        val sszOffset: Int,
+        val sszBytes: Bytes
+    ) {
+        val sszEndOffset get() = sszOffset + sszBytes.size()
+    }
+
+    data class AlignedSlice(
+        val gIndex: Long,
+        val oldSlice: Slice,
+        val newSlice: Slice
+    )
 
     val oldSize= alignedSlices.sumOf { it.oldSlice.sszBytes.size() }
     val oldOffset = alignedSlices.firstOrNull()?.oldSlice?.sszOffset ?: 0
@@ -60,8 +73,11 @@ class AlignedIndexedSsz(
         fun create(oldSsz: IndexedSsz, newSsz: IndexedSsz): AlignedIndexedSsz =
             AlignedIndexedSsz(align(oldSsz, newSsz))
 
-        private fun align(oldSsz: IndexedSsz, newSsz: IndexedSsz): List<AlignedIndexedSlice> {
-            val ret = mutableListOf<AlignedIndexedSlice>()
+        private fun IndexedSsz.IndexedSlice.toSlice() = Slice(sszOffset, sszBytes)
+
+
+        private fun align(oldSsz: IndexedSsz, newSsz: IndexedSsz): List<AlignedSlice> {
+            val ret = mutableListOf<AlignedSlice>()
             val oldGIndexMap = oldSsz.slices
                 .mapIndexed { index, indexedSlice ->  indexedSlice.gIndex to index}
                 .toMap()
@@ -79,10 +95,10 @@ class AlignedIndexedSsz(
                         break
                     }
                     val newOffset = ret.lastOrNull()?.newSlice?.sszEndOffset ?: 0
-                    ret += AlignedIndexedSlice(
+                    ret += AlignedSlice(
                         oldSlice.gIndex,
-                        oldSlice.slice,
-                        IndexedSsz.Slice(newOffset, Bytes.EMPTY)
+                        oldSlice.toSlice(),
+                        Slice(newOffset, Bytes.EMPTY)
                     )
                     oldIndex++
                 }
@@ -93,10 +109,10 @@ class AlignedIndexedSsz(
                         break
                     }
                     val oldOffset = ret.lastOrNull()?.oldSlice?.sszEndOffset ?: 0
-                    ret += AlignedIndexedSlice(
+                    ret += AlignedSlice(
                         newSlice.gIndex,
-                        IndexedSsz.Slice(oldOffset, Bytes.EMPTY),
-                        newSlice.slice
+                        Slice(oldOffset, Bytes.EMPTY),
+                        newSlice.toSlice()
                     )
                     newIndex++
                 }
@@ -107,7 +123,7 @@ class AlignedIndexedSsz(
 
                     assert(oldSlice.gIndex == newSlice.gIndex)
 
-                    ret += AlignedIndexedSlice(oldSlice.gIndex, oldSlice.slice, newSlice.slice)
+                    ret += AlignedSlice(oldSlice.gIndex, oldSlice.toSlice(), newSlice.toSlice())
                     oldIndex++
                     newIndex++
                 }

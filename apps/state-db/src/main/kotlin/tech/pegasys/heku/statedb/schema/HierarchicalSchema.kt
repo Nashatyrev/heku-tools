@@ -8,35 +8,9 @@ import tech.pegasys.heku.statedb.diff.Diff
 import tech.pegasys.heku.statedb.diff.DiffResult
 import tech.pegasys.heku.statedb.diff.DiffSchema
 import tech.pegasys.heku.statedb.schema.DagSchema.Companion.loadOrEmpty
+import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.ext.getOrCompute
-import tech.pegasys.heku.util.ext.max
-import tech.pegasys.heku.util.type.Epoch
-import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.teku.infrastructure.collections.LimitedMap
-
-fun StateIdCalculator.isSame(stateId: StateId) = this.calculateStateId(stateId) == stateId
-
-fun interface StateIdCalculator {
-
-    fun calculateStateId(stateId: StateId) : StateId
-
-    fun withMinimalSlot(minSlot: Slot) = StateIdCalculator {
-        val stateId = calculateStateId(it)
-        StateId(max(stateId.slot, minSlot))
-    }
-
-    companion object {
-
-        val SAME = StateIdCalculator { it }
-
-        fun everyNEpochs(epochs: Epoch) = everyNSlots(epochs.endSlot)
-
-        fun everyNSlots(slots: Slot) = StateIdCalculator {
-            val slot = it.slot floorTo slots
-            StateId(slot)
-        }
-    }
-}
 
 abstract class HierarchicalSchema(
     val diffSchema: DiffSchema,

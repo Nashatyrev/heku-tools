@@ -9,6 +9,8 @@ import tech.pegasys.heku.statedb.db.StateAppender
 import tech.pegasys.heku.statedb.diff.*
 import tech.pegasys.heku.statedb.schema.*
 import tech.pegasys.heku.statedb.ssz.IndexedSsz
+import tech.pegasys.heku.statedb.ssz.IndexedSszSource
+import tech.pegasys.heku.statedb.ssz.cached
 import tech.pegasys.heku.util.type.epochs
 import tech.pegasys.teku.spec.SpecMilestone
 import tech.pegasys.teku.spec.networks.Eth2Network
@@ -26,7 +28,7 @@ class HierarchicalStateSchemaTest {
         val slot = stateId.slot
         require(slot.epoch.startSlot == slot) { "Non epoch slots not supported: $slot" }
         val state = stateLoader.loadState(slot.epoch)
-        IndexedSsz.Companion.create(state)
+        IndexedSsz.create(state)
     }.cached(32)
 
     class DiffStoreFactory {

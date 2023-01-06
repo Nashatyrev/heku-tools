@@ -2,6 +2,7 @@ package tech.pegasys.heku.statedb.schema
 
 import tech.pegasys.heku.statedb.db.DiffStoreFactory
 import tech.pegasys.heku.statedb.diff.*
+import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.heku.util.type.epochs
 import tech.pegasys.teku.spec.SpecMilestone
@@ -31,10 +32,6 @@ class SchemasBuilder {
         block(builder)
         val schema = builder.build()
         return schema
-    }
-
-    interface Schema {
-        fun isSchemaStateId(stateId: StateId): Boolean = TODO()
     }
 
     interface AbstractSchemaBuilder {
@@ -135,63 +132,4 @@ class SchemasBuilder {
             return finalSchema
         }
     }
-}
-
-class SchemaBuilderTry {
-    val s = SchemasBuilder.build {
-        indexedSszSource = null
-        diffStoreFactory = null
-
-        val balancesFieldSelector = GIndexSelector.beaconStateFieldSelector(SpecMilestone.ALTAIR, "balances")
-        val nonBalancesFieldSelector = balancesFieldSelector.invert()
-
-        val balancesCompositeSchema =
-            CompositeDiffSchema(
-                SimpleSszDiffSchema()
-                    .toSparse(nonBalancesFieldSelector)
-                    .gzipped(),
-                UInt64DiffSchema()
-                    .toSparse(balancesFieldSelector)
-                    .gzipped()
-            )
-
-        val rootSchema = newHierarchicalSchema {
-            asRootSchema()
-            diffSchema = SnapshotDiffSchema().gzipped()
-        }
-
-        val x64Schema = newHierarchicalSchema {
-            diffSchema = balancesCompositeSchema
-            parentSchema = rootSchema
-            stateIdCalculator = StateIdCalculator.everyNEpochs(64.epochs)
-        }
-
-        val x16Schema = newHierarchicalSchema {
-            diffSchema = balancesCompositeSchema
-            parentSchema = x64Schema
-            stateIdCalculator = StateIdCalculator.everyNEpochs(16.epochs)
-        }
-
-        newMergeSchema {
-            parentDelegate = x16Schema
-
-            addHierarchicalSchema {
-                diffSchema = SimpleSszDiffSchema()
-                    .toSparse(nonBalancesFieldSelector)
-                    .gzipped()
-                parentSchema = x16Schema
-                stateIdCalculator = StateIdCalculator.everyNEpochs(1.epochs)
-            }
-
-            addHierarchicalSchema {
-                diffSchema = UInt64DiffSchema()
-                    .toSparse(balancesFieldSelector)
-                    .gzipped()
-                parentSchema = x16Schema
-                sameSchemaUntilParent { StateId(it.slot - 1) }
-                stateIdCalculator = StateIdCalculator.everyNEpochs(1.epochs)
-            }
-        }
-    }
-
 }

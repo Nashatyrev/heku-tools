@@ -6,7 +6,7 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.Level
 import tech.pegasys.heku.statedb.db.*
-import tech.pegasys.heku.statedb.schema.cached
+import tech.pegasys.heku.statedb.ssz.cached
 import tech.pegasys.heku.util.beacon.spec
 import tech.pegasys.heku.util.config.startLogging
 import tech.pegasys.heku.util.ext.getPrivateField

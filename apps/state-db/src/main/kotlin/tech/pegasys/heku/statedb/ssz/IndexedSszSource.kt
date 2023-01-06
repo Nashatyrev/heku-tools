@@ -1,8 +1,8 @@
-package tech.pegasys.heku.statedb.schema
+package tech.pegasys.heku.statedb.ssz
 
 import kotlinx.coroutines.runBlocking
-import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.StateLoader
+import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.util.ext.getOrCompute
 import tech.pegasys.teku.infrastructure.collections.LimitedMap
 
@@ -22,9 +22,9 @@ fun interface IndexedSszSource {
     }
 }
 
-fun IndexedSszSource.cached(maxSize: Int) = CachedSszSource(this, maxSize)
+fun IndexedSszSource.cached(maxSize: Int): IndexedSszSource = CachedSszSource(this, maxSize)
 
-class CachedSszSource(
+private class CachedSszSource(
     val delegate: IndexedSszSource,
     maxSize: Int
 ) : IndexedSszSource {
