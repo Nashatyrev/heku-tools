@@ -24,7 +24,7 @@ class CompositeDiffSchema(
                 .toDiffResult()
 
         override fun serialize(): Bytes {
-            val writer = SimpleBytesCodec.Serializer()
+            val writer = BytesWriter()
             writer.writeInt(componentDiffs.size)
             for (componentDiff in componentDiffs) {
                 writer.writeBytes(componentDiff.serialize())
@@ -40,7 +40,7 @@ class CompositeDiffSchema(
 
 
     override fun deserializeDiff(bytes: Bytes): Diff {
-        val reader = SimpleBytesCodec.Deserializer(bytes)
+        val reader = BytesReader(bytes)
         val size = reader.readInt()
         return (0 until size)
             .map { components[it].deserializeDiff(reader.readBytes()) }

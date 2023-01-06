@@ -20,7 +20,7 @@ class UInt64DiffSchema : DiffSchema {
     ) : Diff {
 
         override fun serialize(): Bytes {
-            val writer = SimpleBytesCodec.Serializer()
+            val writer = BytesWriter()
             writer.writeInt(oldOffset)
             writer.writeInt(oldSize)
             writer.writeInt(newOffset)
@@ -76,7 +76,7 @@ class UInt64DiffSchema : DiffSchema {
     }
 
     override fun deserializeDiff(bytes: Bytes): Diff {
-        val reader = SimpleBytesCodec.Deserializer(bytes)
+        val reader = BytesReader(bytes)
         val oldOffset = reader.readInt()
         val oldSize = reader.readInt()
         val newOffset = reader.readInt()

@@ -35,7 +35,7 @@ class SparseDiffSchema(
         }
 
         override fun serialize(): Bytes {
-            val writer = SimpleBytesCodec.Serializer()
+            val writer = BytesWriter()
             writer.writeInt(slices.size)
             for (slice in slices) {
                 writer.writeBytes(slice.serialize())
@@ -45,7 +45,7 @@ class SparseDiffSchema(
     }
 
     override fun deserializeDiff(bytes: Bytes): Diff {
-        val reader = SimpleBytesCodec.Deserializer(bytes)
+        val reader = BytesReader(bytes)
         val size = reader.readInt()
         return (0 until size)
             .map { diffSchema.deserializeDiff(reader.readBytes()) }

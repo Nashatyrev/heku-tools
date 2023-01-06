@@ -30,7 +30,7 @@ class SimpleSszDiffSchema : DiffSchema {
     ) : Diff {
 
         override fun serialize(): Bytes {
-            val serializer = SimpleBytesCodec.Serializer()
+            val serializer = BytesWriter()
             serializer.writeInt(slices.size)
             serializer.writeRange(oldRange)
             serializer.writeRange(newRange)
@@ -61,7 +61,7 @@ class SimpleSszDiffSchema : DiffSchema {
     }
 
     override fun deserializeDiff(bytes: Bytes): SimpleDiff {
-        val reader = SimpleBytesCodec.Deserializer(bytes)
+        val reader = BytesReader(bytes)
         val sliceCount = reader.readInt()
         val oldRange = reader.readRange()
         val newRange = reader.readRange()
