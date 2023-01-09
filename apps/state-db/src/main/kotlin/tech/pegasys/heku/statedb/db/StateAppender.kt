@@ -1,6 +1,6 @@
 package tech.pegasys.heku.statedb.db
 
-import tech.pegasys.heku.statedb.schema.AbstractSchema
+import tech.pegasys.heku.statedb.schema.Schema
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
@@ -52,9 +52,9 @@ class StateAppender(
         instantSpec.specVersion.schemaDefinitions.beaconStateSchema
     }
 
-    lateinit var storageSchema: AbstractSchema
+    lateinit var storageSchema: Schema
 
-    fun initStorageSchema(schema: AbstractSchema) {
+    fun initStorageSchema(schema: Schema) {
         storageSchema = schema
     }
 

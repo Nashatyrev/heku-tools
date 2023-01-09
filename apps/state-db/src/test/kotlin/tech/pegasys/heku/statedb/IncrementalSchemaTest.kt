@@ -6,7 +6,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tech.pegasys.heku.statedb.diff.*
 import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
-import tech.pegasys.heku.statedb.runner.FileEpochStateLoader
+import tech.pegasys.heku.statedb.fixtures.FileEpochStateLoader
+import tech.pegasys.heku.statedb.fixtures.findByGIndex
+import tech.pegasys.heku.statedb.fixtures.findBySszOffset
 import tech.pegasys.heku.statedb.ssz.*
 import tech.pegasys.heku.util.ReadableSize
 import tech.pegasys.heku.util.collections.asSparseBytes

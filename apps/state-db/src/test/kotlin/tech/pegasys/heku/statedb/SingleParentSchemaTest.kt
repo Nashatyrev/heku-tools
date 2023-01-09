@@ -5,18 +5,21 @@ import org.apache.tuweni.bytes.Bytes.fromHexString
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import tech.pegasys.heku.statedb.ssz.IndexedSsz.IndexedSlice
 import tech.pegasys.heku.statedb.db.DiffStore
 import tech.pegasys.heku.statedb.db.DiffStoreFactory
-import tech.pegasys.heku.statedb.db.MemDiffStore
 import tech.pegasys.heku.statedb.diff.*
 import tech.pegasys.heku.statedb.diff.DiffResult.Companion.toDiffResult
-import tech.pegasys.heku.statedb.schema.*
+import tech.pegasys.heku.statedb.fixtures.MemDiffStore
+import tech.pegasys.heku.statedb.fixtures.allBytes
+import tech.pegasys.heku.statedb.schema.SchemasBuilder
+import tech.pegasys.heku.statedb.schema.StateId
+import tech.pegasys.heku.statedb.schema.StateIdCalculator
 import tech.pegasys.heku.statedb.ssz.*
+import tech.pegasys.heku.statedb.ssz.IndexedSsz.IndexedSlice
 import tech.pegasys.heku.util.collections.asSparseBytes
 import tech.pegasys.heku.util.type.slots
 
-class HierarchicalSchemaTest {
+class SingleParentSchemaTest {
 
     val sszData = mapOf(
         StateId(100.slots) to mapOf(
@@ -70,14 +73,14 @@ class HierarchicalSchemaTest {
         val uintSchemaSelector = GIndexSelector { it / 10 == 3L }
         val otherSchemaSelector = GIndexSelector.ALL subtract uintSchemaSelector
 
-        val x100Schema = newHierarchicalSchema {
+        val x100Schema = newSingleParentSchema {
             name = "x100"
             asRootSchema()
             diffSchema = SnapshotDiffSchema()
             stateIdCalculator = StateIdCalculator.everyNSlots(100.slots)
         }
 
-        val x10Schema = newHierarchicalSchema {
+        val x10Schema = newSingleParentSchema {
             name = "x10"
             diffSchema =
                 CompositeDiffSchema(
@@ -91,14 +94,14 @@ class HierarchicalSchemaTest {
         newMergeSchema {
             parentDelegate = x10Schema
 
-            addHierarchicalSchema {
+            addSingleParentSchema {
                 name = "x1Rest"
                 diffSchema = SimpleSszDiffSchema().toSparse(otherSchemaSelector)
                 parentSchema = x10Schema
                 stateIdCalculator = StateIdCalculator.everyNSlots(1.slots)
             }
 
-            addHierarchicalSchema {
+            addSingleParentSchema {
                 name = "x1UInt"
                 diffSchema = UInt64DiffSchema().toSparse(uintSchemaSelector)
                 parentSchema = x10Schema

@@ -1,7 +1,7 @@
 package tech.pegasys.heku.statedb.legacy
 
 import kotlinx.coroutines.runBlocking
-import tech.pegasys.heku.statedb.runner.FileEpochStateLoader
+import tech.pegasys.heku.statedb.fixtures.FileEpochStateLoader
 import tech.pegasys.heku.util.ext.writeBytesGzipped
 import tech.pegasys.heku.util.ext.writeBytesT
 import tech.pegasys.heku.util.log

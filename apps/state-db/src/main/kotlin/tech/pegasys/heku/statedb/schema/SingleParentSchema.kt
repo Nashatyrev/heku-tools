@@ -12,7 +12,7 @@ import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.ext.getOrCompute
 import tech.pegasys.teku.infrastructure.collections.LimitedMap
 
-abstract class HierarchicalSchema(
+abstract class SingleParentSchema(
     val diffSchema: DiffSchema,
     val diffStore: DiffStore,
     val sszSource: IndexedSszSource,

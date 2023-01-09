@@ -13,9 +13,7 @@ class AlignedIndexedSsz(
     data class Slice(
         val sszOffset: Int,
         val sszBytes: Bytes
-    ) {
-        val sszEndOffset get() = sszOffset + sszBytes.size()
-    }
+    )
 
     data class AlignedSlice(
         val gIndex: Long,
@@ -31,37 +29,16 @@ class AlignedIndexedSsz(
     val newRange = newOffset untilLength newSize
 
     init {
-        assert(isDense())
+        assert(isDense(alignedSlices))
     }
 
-    fun isDense() =
-        alignedSlices
-            .zipWithNext()
-            .all {
-                it.second.oldSlice.sszOffset == it.first.oldSlice.sszOffset + it.first.oldSlice.sszBytes.size() &&
-                it.second.newSlice.sszOffset == it.first.newSlice.sszOffset + it.first.newSlice.sszBytes.size()
-            }
-
-
-    fun withRelativeOffsets() = AlignedIndexedSsz(
-        alignedSlices.map {
-            it.copy(
-                oldSlice = it.oldSlice.copy(sszOffset = it.oldSlice.sszOffset - oldOffset),
-                newSlice = it.newSlice.copy(sszOffset = it.newSlice.sszOffset - newOffset)
-            )
-        }
-    )
-
     fun filterDifferentSlices() = alignedSlices.filter { it.oldSlice.sszBytes != it.newSlice.sszBytes }
-
-    fun subrange(indexes: IntRange) = AlignedIndexedSsz(alignedSlices.slice(indexes))
 
     companion object {
         fun create(sszSchema: SszSchema<*>, oldTree: TreeNode, newTree: TreeNode): AlignedIndexedSsz {
             val oldSsz = IndexedSsz.create(sszSchema, oldTree)
             val newSsz = IndexedSsz.create(sszSchema, newTree)
             val alignedIndexedSlices = align(oldSsz, newSsz)
-//            val differentSlices = alignedIndexedSlices.filter { it.oldSlice.sszBytes != it.newSlice.sszBytes }
             return AlignedIndexedSsz(alignedIndexedSlices)
         }
 
@@ -75,6 +52,7 @@ class AlignedIndexedSsz(
 
         private fun IndexedSsz.IndexedSlice.toSlice() = Slice(sszOffset, sszBytes)
 
+        private val Slice.sszEndOffset get() = sszOffset + sszBytes.size()
 
         private fun align(oldSsz: IndexedSsz, newSsz: IndexedSsz): List<AlignedSlice> {
             val ret = mutableListOf<AlignedSlice>()
@@ -134,5 +112,14 @@ class AlignedIndexedSsz(
             }
             return ret
         }
+
+        private fun isDense(alignedSlices: List<AlignedSlice>) =
+            alignedSlices
+                .zipWithNext()
+                .all {
+                    it.second.oldSlice.sszOffset == it.first.oldSlice.sszOffset + it.first.oldSlice.sszBytes.size() &&
+                            it.second.newSlice.sszOffset == it.first.newSlice.sszOffset + it.first.newSlice.sszBytes.size()
+                }
+
     }
 }

@@ -23,7 +23,7 @@ class StateStorageSchema(
         diffStoreFactory = diffStoreFact
         minimalSlot = minSlot
 
-        val eearSchema = newHierarchicalSchema {
+        val eearSchema = newSingleParentSchema {
             asRootSchema()
             diffSchema = SnapshotDiffSchema()
                 .snappied()
@@ -31,21 +31,21 @@ class StateStorageSchema(
             name = "eearSchema"
         }
 
-        val eonthSchema = newHierarchicalSchema {
+        val eonthSchema = newSingleParentSchema {
             diffSchema = SimpleSszDiffSchema()
             parentSchema = eearSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EONTH.epochs)
             name = "eonthSchema"
         }
 
-        val eekSchema = newHierarchicalSchema {
+        val eekSchema = newSingleParentSchema {
             diffSchema = SimpleSszDiffSchema()
             parentSchema = eonthSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EEK.epochs)
             name = "eekSchema"
         }
 
-        val eaySchema = newHierarchicalSchema {
+        val eaySchema = newSingleParentSchema {
             diffSchema = SimpleSszDiffSchema()
             parentSchema = eekSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EAY.epochs)
@@ -65,14 +65,14 @@ class StateStorageSchema(
                     .gzipped()
             )
 
-        val epochX64Schema = newHierarchicalSchema {
+        val epochX64Schema = newSingleParentSchema {
             diffSchema = balancesCompositeSchema
             parentSchema = eaySchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(64.epochs)
             name = "epochX64Schema"
         }
 
-        val epochX16Schema = newHierarchicalSchema {
+        val epochX16Schema = newSingleParentSchema {
             diffSchema = balancesCompositeSchema
             parentSchema = epochX64Schema
             stateIdCalculator = StateIdCalculator.everyNEpochs(16.epochs)
@@ -89,7 +89,7 @@ class StateStorageSchema(
         newMergeSchema {
             parentDelegate = epochX16Schema
 
-            addHierarchicalSchema {
+            addSingleParentSchema {
                 diffSchema = SimpleSszDiffSchema()
                     .toSparse(nonBalancesFieldSelector)
                     .gzipped()
@@ -98,7 +98,7 @@ class StateStorageSchema(
                 name = "epochX1RestSchema"
             }
 
-            addHierarchicalSchema {
+            addSingleParentSchema {
                 diffSchema = UInt64DiffSchema()
                     .toSparse(balancesFieldSelector)
                     .gzipped()

@@ -2,8 +2,9 @@ package tech.pegasys.heku.statedb.legacy
 
 import kotlinx.coroutines.runBlocking
 import tech.pegasys.heku.statedb.db.*
-import tech.pegasys.heku.statedb.runner.IncSszStateLoader
+import tech.pegasys.heku.statedb.db.IncSszStateLoader
 import tech.pegasys.heku.statedb.schema.StateId
+import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
 import tech.pegasys.heku.util.beacon.spec
 import tech.pegasys.heku.util.type.Epoch
@@ -39,7 +40,7 @@ class Converter(
 
     val storageFactory = HackyDiffStorageFactory(SimpleLevelDBDiffStorageFactory(loader.db))
 
-    val sszSource = IndexedSszSource.createFromStateLoader(loader)
+    val sszSource = createFromStateLoader(loader)
     val targetStorageSchema =
         StateStorageSchema(
             storageFactory,
@@ -50,6 +51,15 @@ class Converter(
     fun convert(stateId: StateId) {
         runBlocking {
             targetStorageSchema.save(stateId)
+        }
+    }
+
+    companion object {
+        fun createFromStateLoader(stateLoader: StateLoader) = IndexedSszSource {
+            val state = runBlocking {
+                stateLoader.loadState(it.slot)
+            }
+            IndexedSsz.create(state)
         }
     }
 }

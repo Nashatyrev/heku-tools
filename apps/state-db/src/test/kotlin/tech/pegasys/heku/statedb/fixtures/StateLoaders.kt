@@ -1,9 +1,10 @@
-package tech.pegasys.heku.statedb.runner
+package tech.pegasys.heku.statedb.fixtures
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import org.apache.tuweni.bytes.Bytes
+import tech.pegasys.heku.statedb.db.StateLoader
 import tech.pegasys.heku.util.beacon.spec
 import tech.pegasys.heku.util.config.startLogging
 import tech.pegasys.heku.util.ext.readBytesGzipped
@@ -19,12 +20,6 @@ import tech.pegasys.teku.spec.networks.Eth2Network
 import java.io.File
 import java.net.URI
 import java.nio.file.Path
-
-interface StateLoader {
-
-    suspend fun loadState(slot: Slot): BeaconState
-    suspend fun loadState(epoch: Epoch): BeaconState = loadState(epoch.startSlot)
-}
 
 class NodeApiStateLoader(
     val spec: Spec,

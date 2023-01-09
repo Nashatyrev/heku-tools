@@ -13,10 +13,10 @@ class SchemasBuilder {
     var indexedSszSource: IndexedSszSource? = null
     var minimalSlot: Slot = Slot(0)
 
-    val schemaToBuilder = mutableMapOf<DagSchema, HierarchicalSchemaBuilder>()
+    val schemaToBuilder = mutableMapOf<DagSchema, SingleParentSchemaBuilder>()
 
-    fun newHierarchicalSchema(block: HierarchicalSchemaBuilder.() -> Unit): DagSchema {
-        val builder = HierarchicalSchemaBuilder()
+    fun newSingleParentSchema(block: SingleParentSchemaBuilder.() -> Unit): DagSchema {
+        val builder = SingleParentSchemaBuilder()
         block(builder)
         val schema = builder.build()
         schemaToBuilder[schema] = builder
@@ -42,8 +42,8 @@ class SchemasBuilder {
 
         private val parentSchemas = mutableListOf<DagSchema>()
 
-        fun addHierarchicalSchema(block: HierarchicalSchemaBuilder.() -> Unit): DagSchema {
-            val builder = HierarchicalSchemaBuilder()
+        fun addSingleParentSchema(block: SingleParentSchemaBuilder.() -> Unit): DagSchema {
+            val builder = SingleParentSchemaBuilder()
             block(builder)
             val schema = builder.build()
             parentSchemas += schema
@@ -67,7 +67,7 @@ class SchemasBuilder {
         }
     }
 
-    inner class HierarchicalSchemaBuilder : AbstractSchemaBuilder {
+    inner class SingleParentSchemaBuilder : AbstractSchemaBuilder {
         var diffSchema: DiffSchema? = null
         var rootSchema = false
         override var parentSchema: DagSchema? = null
@@ -96,7 +96,7 @@ class SchemasBuilder {
             }
         }
 
-        fun build(): HierarchicalSchema {
+        fun build(): SingleParentSchema {
             require(parentSchema != null || rootSchema) { "Should be declared either as root schema or parent schema should be set" }
             requireNotNull(stateIdCalculator)
             stateIdCalculator = stateIdCalculator!!.withMinimalSlot(minimalSlot)
@@ -111,7 +111,7 @@ class SchemasBuilder {
                 }
             }
 
-            return object : HierarchicalSchema(
+            return object : SingleParentSchema(
                 diffSchema ?: throw IllegalStateException("diffSchema should be set"),
                 diffStoreFactory?.createStore() ?: throw IllegalStateException("diffStoreFactory should be set"),
                 indexedSszSource ?: throw IllegalStateException("indexedSszSource should be set"),
@@ -126,7 +126,7 @@ class SchemasBuilder {
     }
 
     companion object {
-        fun build(block: SchemasBuilder.() -> AbstractSchema): AbstractSchema {
+        fun build(block: SchemasBuilder.() -> Schema): Schema {
             val schemasBuilder = SchemasBuilder()
             val finalSchema = block(schemasBuilder)
             return finalSchema

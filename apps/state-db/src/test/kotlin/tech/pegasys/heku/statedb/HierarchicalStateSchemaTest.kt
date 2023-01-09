@@ -4,11 +4,15 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tech.pegasys.heku.statedb.db.DiffStoreFactory
-import tech.pegasys.heku.statedb.db.MemDiffStore
 import tech.pegasys.heku.statedb.db.StateAppender
 import tech.pegasys.heku.statedb.diff.*
-import tech.pegasys.heku.statedb.runner.FileEpochStateLoader
-import tech.pegasys.heku.statedb.schema.*
+import tech.pegasys.heku.statedb.fixtures.FileEpochStateLoader
+import tech.pegasys.heku.statedb.fixtures.MemDiffStore
+import tech.pegasys.heku.statedb.fixtures.allBytes
+import tech.pegasys.heku.statedb.schema.Schema
+import tech.pegasys.heku.statedb.schema.SchemasBuilder
+import tech.pegasys.heku.statedb.schema.StateId
+import tech.pegasys.heku.statedb.schema.StateIdCalculator
 import tech.pegasys.heku.statedb.ssz.*
 import tech.pegasys.heku.util.type.epochs
 import tech.pegasys.teku.spec.SpecMilestone
@@ -37,7 +41,7 @@ class HierarchicalStateSchemaTest {
 
     val diffStore = DiffStoreFactory()
 
-    val schemaBuilder: (IndexedSszSource) -> AbstractSchema = { sszSource ->
+    val schemaBuilder: (IndexedSszSource) -> Schema = { sszSource ->
         SchemasBuilder.build {
             indexedSszSource = sszSource
             diffStoreFactory = DiffStoreFactory { diffStore.create() }
@@ -56,19 +60,19 @@ class HierarchicalStateSchemaTest {
                         .gzipped()
                 )
 
-            val rootSchema = newHierarchicalSchema {
+            val rootSchema = newSingleParentSchema {
                 asRootSchema()
                 diffSchema = SnapshotDiffSchema().gzipped()
                 stateIdCalculator = StateIdCalculator { StateId(minimalSlot) }
             }
 
-            val x64Schema = newHierarchicalSchema {
+            val x64Schema = newSingleParentSchema {
                 diffSchema = balancesCompositeSchema
                 parentSchema = rootSchema
                 stateIdCalculator = StateIdCalculator.everyNEpochs(64.epochs)
             }
 
-            val x16Schema = newHierarchicalSchema {
+            val x16Schema = newSingleParentSchema {
                 diffSchema = balancesCompositeSchema
                 parentSchema = x64Schema
                 stateIdCalculator = StateIdCalculator.everyNEpochs(16.epochs)
@@ -77,7 +81,7 @@ class HierarchicalStateSchemaTest {
             newMergeSchema {
                 parentDelegate = x16Schema
 
-                addHierarchicalSchema {
+                addSingleParentSchema {
                     diffSchema = SimpleSszDiffSchema()
                         .toSparse(nonBalancesFieldSelector)
                         .gzipped()
@@ -85,7 +89,7 @@ class HierarchicalStateSchemaTest {
                     stateIdCalculator = StateIdCalculator.everyNEpochs(1.epochs)
                 }
 
-                addHierarchicalSchema {
+                addSingleParentSchema {
                     diffSchema = UInt64DiffSchema()
                         .toSparse(balancesFieldSelector)
                         .gzipped()

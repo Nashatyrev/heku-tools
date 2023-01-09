@@ -1,7 +1,5 @@
 package tech.pegasys.heku.statedb.ssz
 
-import kotlinx.coroutines.runBlocking
-import tech.pegasys.heku.statedb.runner.StateLoader
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.util.ext.getOrCompute
 import tech.pegasys.teku.infrastructure.collections.LimitedMap
@@ -12,13 +10,6 @@ fun interface IndexedSszSource {
 
     companion object {
         val NOOP = IndexedSszSource { throw RuntimeException("NOOP instance") }
-
-        fun createFromStateLoader(stateLoader: StateLoader) = IndexedSszSource {
-            val state = runBlocking {
-                stateLoader.loadState(it.slot)
-            }
-            IndexedSsz.Companion.create(state)
-        }
     }
 }
 
