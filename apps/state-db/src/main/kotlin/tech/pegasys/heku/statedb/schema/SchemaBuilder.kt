@@ -74,7 +74,8 @@ class SchemasBuilder {
         var stateIdCalculator: StateIdCalculator? = null
         var parentSelector: ParentSelector? = null
         var name = "<noname>"
-        var cacheSize = 0
+        var diffCacheSize = 0
+        var resultCacheSize = 0
 
         fun asRootSchema() { rootSchema = true }
 
@@ -116,7 +117,8 @@ class SchemasBuilder {
                 indexedSszSource ?: throw IllegalStateException("indexedSszSource should be set"),
                 true,
                 name,
-                cacheSize
+                diffCacheSize,
+                resultCacheSize
             ) {
                 override fun getParent(stateId: StateId): DagSchemaVertex? = pSelector(this, stateId)
             }

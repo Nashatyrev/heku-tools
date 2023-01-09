@@ -19,10 +19,11 @@ abstract class HierarchicalSchema(
     val delegateToParent: Boolean = true,
     val name: String = "<unnamed>",
     val diffCacheSize: Int = 0,
+    val resultCacheSize: Int = 0,
 ) : DagSchema {
 
     val diffCache = LimitedMap.createSynchronized<DiffId, Diff>(diffCacheSize)
-    val resultCache = LimitedMap.createSynchronized<StateId, DiffResult>(diffCacheSize)
+    val resultCache = LimitedMap.createSynchronized<StateId, DiffResult>(resultCacheSize)
 
     abstract fun getParent(stateId: StateId): DagSchemaVertex?
 

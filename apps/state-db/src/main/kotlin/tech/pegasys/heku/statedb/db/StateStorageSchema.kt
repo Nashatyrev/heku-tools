@@ -28,7 +28,6 @@ class StateStorageSchema(
             diffSchema = SnapshotDiffSchema()
                 .snappied()
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EEAR.epochs)
-//            cacheSize = 1
             name = "eearSchema"
         }
 
@@ -36,7 +35,6 @@ class StateStorageSchema(
             diffSchema = SimpleSszDiffSchema()
             parentSchema = eearSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EONTH.epochs)
-//            cacheSize = 1
             name = "eonthSchema"
         }
 
@@ -44,7 +42,6 @@ class StateStorageSchema(
             diffSchema = SimpleSszDiffSchema()
             parentSchema = eonthSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EEK.epochs)
-//            cacheSize = 1
             name = "eekSchema"
         }
 
@@ -52,7 +49,6 @@ class StateStorageSchema(
             diffSchema = SimpleSszDiffSchema()
             parentSchema = eekSchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(ETime.EAY.epochs)
-//            cacheSize = 1
             name = "eaySchema"
         }
 
@@ -73,7 +69,6 @@ class StateStorageSchema(
             diffSchema = balancesCompositeSchema
             parentSchema = eaySchema
             stateIdCalculator = StateIdCalculator.everyNEpochs(64.epochs)
-//            cacheSize = 1
             name = "epochX64Schema"
         }
 
@@ -81,7 +76,12 @@ class StateStorageSchema(
             diffSchema = balancesCompositeSchema
             parentSchema = epochX64Schema
             stateIdCalculator = StateIdCalculator.everyNEpochs(16.epochs)
-            cacheSize = 1
+
+            // workaround to avoid double calculation of epochX16Schema bytes
+            // TODO: we need a stateless mechanism to reuse result required by several distinct children schemas
+            //       this is to avoid cached value to be retained in memory after load() call
+            resultCacheSize = 1
+
             name = "epochX16Schema"
         }
 
@@ -105,7 +105,6 @@ class StateStorageSchema(
                 parentSchema = epochX16Schema
                 sameSchemaUntilParent { StateId(it.slot - 1.epochs) }
                 stateIdCalculator = StateIdCalculator.everyNEpochs(1.epochs)
-//                cacheSize = 16
                 name = "epochX1BalancesSchema"
             }
         }
