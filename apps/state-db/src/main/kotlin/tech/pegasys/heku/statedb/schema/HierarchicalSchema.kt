@@ -18,7 +18,7 @@ abstract class HierarchicalSchema(
     val sszSource: IndexedSszSource,
     val delegateToParent: Boolean = true,
     val name: String = "<unnamed>",
-    diffCacheSize: Int = 0,
+    val diffCacheSize: Int = 0,
 ) : DagSchema {
 
     val diffCache = LimitedMap.createSynchronized<DiffId, Diff>(diffCacheSize)
@@ -30,13 +30,13 @@ abstract class HierarchicalSchema(
         getParent(stateId)?.let { listOf(it) } ?: emptyList()
 
     override suspend fun load(stateId: StateId): DiffResult {
-        val parentSchema = getParent(stateId)
-        val parentSsz = parentSchema.loadOrEmpty()
+        return resultCache.getOrCompute(stateId) {
+            val parentSchema = getParent(stateId)
+            val parentSsz = parentSchema.loadOrEmpty()
 
-        return if (delegateToParent && parentSchema?.stateId == stateId) {
-            parentSsz
-        } else {
-            resultCache.getOrCompute(stateId) {
+            if (delegateToParent && parentSchema?.stateId == stateId) {
+                parentSsz
+            } else {
                 val diff = loadDiff(DiffId(stateId))
                 diff.apply(parentSsz)
             }
