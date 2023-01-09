@@ -81,7 +81,7 @@ class StateStorageSchema(
             diffSchema = balancesCompositeSchema
             parentSchema = epochX64Schema
             stateIdCalculator = StateIdCalculator.everyNEpochs(16.epochs)
-//            cacheSize = 1
+            cacheSize = 1
             name = "epochX16Schema"
         }
 

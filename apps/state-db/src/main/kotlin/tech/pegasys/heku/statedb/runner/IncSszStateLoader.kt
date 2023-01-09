@@ -23,6 +23,7 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 class IncSszStateLoader(
     val eth2Network: Eth2Network = Eth2Network.MAINNET,
@@ -94,13 +95,14 @@ fun main() {
 
     runBlocking {
         while (true) {
-            val t = measureTime {
+            val t = measureTimedValue {
 //                stateLoader.loadState(74241.epochs.startSlot)
 //                stateLoader.loadState(131120.epochs.startSlot)
-                stateLoader.loadState(131121.epochs.startSlot)
+//                stateLoader.loadState(131122.epochs.startSlot)
+                stateLoader.loadState((74241.epochs..131122.epochs).random().startSlot)
             }
 
-            log("Loaded state in $t")
+            log("Loaded state ${t.value.slot} in ${t.duration.inWholeMilliseconds}")
         }
     }
 }
