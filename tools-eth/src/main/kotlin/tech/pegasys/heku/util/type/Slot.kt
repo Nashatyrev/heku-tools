@@ -55,6 +55,7 @@ value class Epoch(val value: Long) : Comparable<Epoch> {
     val endSlot get() = Slot((value + 1) * 32)
     val lastSlot get() = endSlot.dec()
 
+    operator fun plus(inc: Epoch): Epoch = Epoch(value + inc.value)
     operator fun plus(inc: Number): Epoch = Epoch(value + inc.toLong())
     operator fun minus(dec: Epoch): Epoch = Epoch(value - dec.value)
     operator fun minus(dec: Number): Epoch = Epoch(value - dec.toLong())
