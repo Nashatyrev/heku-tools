@@ -8,6 +8,8 @@ import kotlinx.coroutines.selects.select
 import tech.pegasys.heku.util.flow.SafeSharedFlow
 import tech.pegasys.heku.util.flow.bufferWithError
 import tech.pegasys.heku.util.ext.toChannel
+import tech.pegasys.heku.util.type.Slot
+import tech.pegasys.heku.util.type.slots
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -45,7 +47,7 @@ class SlotAggregator<T>(
 
         val aggregatesChannel = bufferedSlotData.toChannel(scope)
         val slotChannel = slotsFlow.toChannel(scope)
-        var lastSlot = -1
+        var lastSlot = 0.slots
         while(true) {
             select<Unit> {
                 aggregatesChannel.onReceive {
@@ -58,12 +60,11 @@ class SlotAggregator<T>(
                         lateAggregatesSink.emitOrThrow(it)
                     }
                 }
-                slotChannel.onReceive { curSlotU ->
-                    val curSlot = curSlotU
-                    val startSlot1 = lastSlot - trackDistance + 1
+                slotChannel.onReceive { curSlot ->
+                    val startSlot1 = lastSlot.value - trackDistance.value + 1
                     val startSlot =
                         when {
-                            startSlot1 > 0 -> startSlot1
+                            startSlot1 > 0 -> startSlot1.slots
                             else -> aggregatesBySlot.keys.minOrNull()
                                 ?: (curSlot - trackDistance + 1)
                         }

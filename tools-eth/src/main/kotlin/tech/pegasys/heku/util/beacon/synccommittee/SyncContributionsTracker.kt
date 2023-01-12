@@ -4,16 +4,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import tech.pegasys.heku.util.beacon.Slot
 import tech.pegasys.heku.util.beacon.SlotAggregator
 import tech.pegasys.heku.util.beacon.SyncSubCommitteeIndex
 import tech.pegasys.heku.util.beacon.ValidatorIndex
+import tech.pegasys.heku.util.type.Slot
+import tech.pegasys.heku.util.type.asSlot
+import tech.pegasys.heku.util.type.slots
 import tech.pegasys.teku.spec.datastructures.operations.versions.altair.SyncCommitteeMessage
 
 class SyncContributionsTracker(
     syncContributionsFlow: Flow<SyncCommitteeMessageAndSubnet>,
     slotsFlow: Flow<Slot>,
-    trackDistance: Slot = 2,
+    trackDistance: Slot = 2.slots,
     scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
 ) {
 
@@ -29,7 +31,7 @@ class SyncContributionsTracker(
 
     private val slotAggregator = SlotAggregator(
         syncContributionsFlow,
-        { it.message.slot.intValue() },
+        { it.message.slot.asSlot() },
         slotsFlow,
         trackDistance = trackDistance,
         emitEmptyAggregates = true,

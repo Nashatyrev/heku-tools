@@ -1,10 +1,17 @@
 package tech.pegasys.heku.util.ext
 
-fun IntRange.split(maxSize: Int): List<IntRange> {
-    val ret = mutableListOf<IntRange>()
+import java.lang.Long.min
+
+fun IntRange.split(maxSize: Int): List<IntRange> =
+    LongRange(start.toLong(), endInclusive.toLong())
+        .split(maxSize)
+        .map { IntRange(it.first.toInt(), it.last.toInt()) }
+
+fun LongRange.split(maxSize: Int): List<LongRange> {
+    val ret = mutableListOf<LongRange>()
     var start = this.first
     while (start <= this.last) {
-        val endIncl = Integer.min(this.last, start + maxSize - 1)
+        val endIncl = min(this.last, start + maxSize - 1)
         ret += start .. endIncl
         start = endIncl + 1
     }

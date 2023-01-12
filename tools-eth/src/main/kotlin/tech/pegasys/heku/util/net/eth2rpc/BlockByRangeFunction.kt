@@ -5,14 +5,13 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.*
 import tech.pegasys.heku.util.RateLimiter
-import tech.pegasys.heku.util.beacon.Slot
 import tech.pegasys.heku.util.collections.KQueue
 import tech.pegasys.heku.util.collections.Pool
 import tech.pegasys.heku.util.collections.map
-import tech.pegasys.heku.util.ext.split
 import tech.pegasys.heku.util.ext.toUInt64
 import tech.pegasys.heku.util.log
 import tech.pegasys.heku.util.toStringCompact
+import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.teku.infrastructure.async.SafeFuture
 import tech.pegasys.teku.networking.eth2.peers.Eth2Peer
 import tech.pegasys.teku.networking.p2p.rpc.RpcResponseListener
@@ -106,12 +105,14 @@ class SplitSequentiallyBlockByRangeFunction(
 
     override suspend fun getBlocksByRange(startSlot: Slot, count: Int): Flow<BeaconBlock> =
         flow {
-            (startSlot until startSlot + count).split(maxChunkSize).forEach {
-                val rangeFlow = delegate.getBlocksByRange(it.first, it.count())
-                rangeFlow.collect {
-                    emit(it)
+            (startSlot until startSlot + count)
+                .chunked(maxChunkSize)
+                .forEach {
+                    val rangeFlow = delegate.getBlocksByRange(it.first(), it.count())
+                    rangeFlow.collect {
+                        emit(it)
+                    }
                 }
-            }
         }
 }
 
@@ -126,10 +127,10 @@ class SplitParallelBlockByRangeFunction(
 
     override suspend fun getBlocksByRange(startSlot: Slot, count: Int): Flow<BeaconBlock> {
         return (startSlot until startSlot + count)
-            .split(maxChunkSize)
+            .chunked(maxChunkSize)
             .asFlow()
             .flatMapMerge(concurrency) {
-                delegate.getBlocksByRange(it.first, it.count())
+                delegate.getBlocksByRange(it.first(), it.size)
             }
     }
 }
@@ -266,7 +267,7 @@ class Eth2PeerBlockByRangeFunction(
                     SafeFuture.failedFuture<Void>(RuntimeException("Couldn't emit block: $res"))
                 }
             }
-            val resultFuture = peer.requestBlocksByRange(startSlot.toUInt64(), count.toUInt64(), callback)
+            val resultFuture = peer.requestBlocksByRange(startSlot.uint64, count.toUInt64(), callback)
 
             resultFuture
                 .catchAndRethrow {

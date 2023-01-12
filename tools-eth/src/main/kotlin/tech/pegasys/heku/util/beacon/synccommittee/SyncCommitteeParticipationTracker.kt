@@ -4,11 +4,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import tech.pegasys.heku.util.beacon.Slot
 import tech.pegasys.heku.util.beacon.SlotAggregator
 import tech.pegasys.heku.util.beacon.SlotAggregator.SlotData
 import tech.pegasys.heku.util.beacon.SyncSubCommitteeIndex
 import tech.pegasys.heku.util.ext.or
+import tech.pegasys.heku.util.type.Slot
+import tech.pegasys.heku.util.type.asSlot
+import tech.pegasys.heku.util.type.slots
 import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector
 import tech.pegasys.teku.spec.datastructures.operations.versions.altair.ContributionAndProof
 import tech.pegasys.teku.spec.datastructures.operations.versions.altair.SyncCommitteeContribution
@@ -17,7 +19,7 @@ import java.lang.Integer.max
 class SyncCommitteeParticipationTracker(
     syncCommitteeContributionAndProofFlow: Flow<ContributionAndProof>,
     slotsFlow: Flow<Slot>,
-    trackDistance: Slot = 2,
+    trackDistance: Slot = 2.slots,
     scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
 ) {
     data class Participation(
@@ -50,7 +52,7 @@ class SyncCommitteeParticipationTracker(
 
     private val slotAggregator = SlotAggregator(
         syncCommitteeContributionAndProofFlow,
-        { it.contribution.slot.intValue() },
+        { it.contribution.slot.asSlot() },
         slotsFlow,
         trackDistance = trackDistance,
         emitEmptyAggregates = true,
