@@ -1,14 +1,11 @@
-package tech.pegasys.heku.util.beacon
+package tech.pegasys.heku.util.beacon.spec
 
 import org.apache.tuweni.bytes.Bytes32
 import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.networks.Eth2NetworkConfiguration
-import tech.pegasys.teku.services.beaconchain.WeakSubjectivityInitializer
 import tech.pegasys.teku.spec.datastructures.genesis.GenesisData
-import tech.pegasys.teku.spec.datastructures.state.AnchorPoint
 import tech.pegasys.teku.spec.networks.Eth2Network
 import tech.pegasys.teku.spec.networks.Eth2Network.*
-import java.util.*
 
 fun Eth2Network.spec() = PredefinedNetworks.NETWORK_SPECS[this] ?: throw IllegalArgumentException("Unknown network $this")
 
@@ -56,32 +53,5 @@ class PredefinedNetworks {
                 spec.forks.allDigests.map { it to network }
             }.toMap()
 
-
-        /** for initialization only **/
-        private val NETWORKS_STARTED = listOf(
-            MAINNET,
-            PRATER,
-            ROPSTEN,
-            SEPOLIA,
-            KILN,
-            GNOSIS
-        )
-
-        private fun loadAll() = NETWORKS_STARTED.associateWith { load(it) }
-
-        private fun load(network: Eth2Network): SpecExt {
-            val eth2NetworkConfiguration = Eth2NetworkConfiguration.builder()
-                .applyNetworkDefaults(network)
-                .build()
-
-            val initialAnchor: Optional<AnchorPoint> = WeakSubjectivityInitializer().loadInitialAnchorPoint(
-                eth2NetworkConfiguration.spec, eth2NetworkConfiguration.initialState
-            )
-            val anchorPoint = initialAnchor.orElseThrow()
-            return SpecExt(
-                eth2NetworkConfiguration.spec,
-                GenesisData(anchorPoint.state.genesisTime, anchorPoint.state.genesisValidatorsRoot)
-            )
-        }
     }
 }

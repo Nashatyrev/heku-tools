@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import tech.pegasys.heku.util.beacon.SlotAggregator
 import tech.pegasys.heku.util.beacon.SlotAggregator.SlotData
-import tech.pegasys.heku.util.beacon.SyncSubCommitteeIndex
+import tech.pegasys.heku.util.type.SyncSubCommitteeIndex
 import tech.pegasys.heku.util.ext.or
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.heku.util.type.asSlot

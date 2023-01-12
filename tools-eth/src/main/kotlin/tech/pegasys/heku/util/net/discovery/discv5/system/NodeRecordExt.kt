@@ -5,7 +5,7 @@ import io.libp2p.crypto.keys.unmarshalSecp256k1PublicKey
 import org.apache.tuweni.bytes.Bytes
 import org.ethereum.beacon.discovery.schema.EnrField
 import org.ethereum.beacon.discovery.schema.NodeRecord
-import tech.pegasys.heku.util.beacon.PredefinedNetworks
+import tech.pegasys.heku.util.beacon.spec.PredefinedNetworks
 import tech.pegasys.heku.util.ext.toDiscNodeId
 import tech.pegasys.heku.util.ext.toStringMedium
 import tech.pegasys.teku.infrastructure.bytes.Bytes4

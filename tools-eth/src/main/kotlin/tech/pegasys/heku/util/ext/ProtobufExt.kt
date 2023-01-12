@@ -11,11 +11,6 @@ fun Rpc.RPC.toJson() = protobufJsonFormat.printToString(this)
 
 fun Rpc.RPC.toStringM() = "Rpc[publishes=\n  " + this.publishList + "]"
 
-private fun publishListToString(list: List<Rpc.Message>) =
-    if (list.isEmpty()) "" else {
-        "publish=" + list.joinToString(", ") { it.toStringM() }
-    }
-
 fun Rpc.Message.toStringM() = "Rpc.Message[topics=${this.topicIDsList}, data=" +
         Bytes.wrap(this.data.toByteArray()) + "]"
 

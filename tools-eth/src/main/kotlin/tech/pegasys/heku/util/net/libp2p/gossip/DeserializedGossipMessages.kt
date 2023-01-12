@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import tech.pegasys.heku.util.beacon.SpecExt
+import tech.pegasys.heku.util.beacon.spec.SpecExt
 import tech.pegasys.heku.util.flow.bufferWithError
 import tech.pegasys.heku.util.flow.shareInCompletable
 import tech.pegasys.teku.infrastructure.ssz.SszContainer

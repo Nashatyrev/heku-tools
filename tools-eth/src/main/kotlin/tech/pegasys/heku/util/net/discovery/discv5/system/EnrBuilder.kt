@@ -3,7 +3,6 @@ package tech.pegasys.heku.util.net.discovery.discv5.system
 import com.google.common.base.Preconditions
 import io.libp2p.core.crypto.PrivKey
 import org.apache.tuweni.bytes.Bytes
-import org.apache.tuweni.bytes.Bytes32
 import org.apache.tuweni.crypto.SECP256K1
 import org.apache.tuweni.units.bigints.UInt64
 import org.ethereum.beacon.discovery.schema.EnrField
@@ -11,7 +10,7 @@ import org.ethereum.beacon.discovery.schema.IdentitySchema
 import org.ethereum.beacon.discovery.schema.NodeRecord
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory
 import org.ethereum.beacon.discovery.util.Functions
-import tech.pegasys.heku.util.beacon.spec
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.ext.toDiscV5SecretKey
 import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector
 import tech.pegasys.teku.infrastructure.ssz.schema.collections.SszBitvectorSchema

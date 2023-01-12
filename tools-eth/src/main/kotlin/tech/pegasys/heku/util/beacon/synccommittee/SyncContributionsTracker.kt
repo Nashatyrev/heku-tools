@@ -5,8 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import tech.pegasys.heku.util.beacon.SlotAggregator
-import tech.pegasys.heku.util.beacon.SyncSubCommitteeIndex
-import tech.pegasys.heku.util.beacon.ValidatorIndex
+import tech.pegasys.heku.util.type.SyncSubCommitteeIndex
+import tech.pegasys.heku.util.type.ValidatorIndex
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.heku.util.type.asSlot
 import tech.pegasys.heku.util.type.slots

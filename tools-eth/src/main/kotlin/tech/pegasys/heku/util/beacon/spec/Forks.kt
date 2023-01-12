@@ -1,4 +1,4 @@
-package tech.pegasys.heku.util.beacon
+package tech.pegasys.heku.util.beacon.spec
 
 import org.apache.tuweni.bytes.Bytes32
 import tech.pegasys.teku.infrastructure.unsigned.UInt64

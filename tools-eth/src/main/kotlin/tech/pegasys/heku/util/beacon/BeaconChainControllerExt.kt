@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.shareIn
+import tech.pegasys.heku.util.beacon.spec.SpecExt
 import tech.pegasys.heku.util.ext.callPrivateMethod
 import tech.pegasys.heku.util.collections.FSet
 import tech.pegasys.teku.BeaconNodeFacade

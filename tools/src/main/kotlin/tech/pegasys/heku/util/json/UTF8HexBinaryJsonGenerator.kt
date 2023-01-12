@@ -4,23 +4,10 @@ import com.fasterxml.jackson.core.*
 import com.fasterxml.jackson.core.io.IOContext
 import com.fasterxml.jackson.core.json.UTF8JsonGenerator
 import com.fasterxml.jackson.core.json.WriterBasedJsonGenerator
-import com.googlecode.protobuf.format.JsonJacksonFormat
 import org.apache.tuweni.bytes.Bytes
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.Writer
-
-class ProtobufJsonFormat(
-    val prettyPrinterFactory: () -> PrettyPrinter? = { null }
-) : JsonJacksonFormat() {
-    val factory = HexBinaryJsonFactory().also {
-        it.prettyPrinterFactory = prettyPrinterFactory
-    }
-
-    override fun createGenerator(output: OutputStream): JsonGenerator {
-        return factory.createGenerator(output)
-    }
-}
 
 class HexBinaryJsonFactory : JsonFactory() {
     var prettyPrinterFactory: () -> PrettyPrinter? = { null }

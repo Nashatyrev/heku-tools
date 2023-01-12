@@ -1,4 +1,4 @@
-package tech.pegasys.heku.util.beacon
+package tech.pegasys.heku.util.beacon.spec
 
 import tech.pegasys.heku.util.MTime
 import tech.pegasys.heku.util.ext.toEthSeconds

@@ -1,4 +1,4 @@
-package tech.pegasys.heku.util.beacon
+package tech.pegasys.heku.util.type
 
 typealias ValidatorIndex = Int
 
