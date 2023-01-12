@@ -35,7 +35,13 @@ fun PubKey.toNodeId(): DiscNodeId {
 
 fun PrivKey.toDiscV5SecretKey(): SECP256K1.SecretKey {
     require(this is Secp256k1PrivateKey)
-    return Functions.createSecretKey(Bytes32.wrap(this.raw()))
+    val rawBytes = this.raw()
+    require(rawBytes.size <= 33)
+    val noSignRawBytes =
+        if (rawBytes.size == 33)
+            rawBytes.slice(1..32).toByteArray()
+        else rawBytes
+    return Functions.createSecretKey(Bytes32.leftPad(Bytes.wrap(noSignRawBytes)))
 }
 
 fun NodeRecord.getLibP2PPublicKey() =

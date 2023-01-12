@@ -12,6 +12,7 @@ import org.ethereum.beacon.discovery.schema.NodeRecord
 import org.ethereum.beacon.discovery.schema.NodeRecordFactory
 import org.ethereum.beacon.discovery.util.Functions
 import tech.pegasys.heku.util.beacon.spec
+import tech.pegasys.heku.util.ext.toDiscV5SecretKey
 import tech.pegasys.teku.infrastructure.ssz.collections.SszBitvector
 import tech.pegasys.teku.infrastructure.ssz.schema.collections.SszBitvectorSchema
 import tech.pegasys.teku.networking.p2p.discovery.DiscoveryNetwork
@@ -45,7 +46,7 @@ class EnrBuilder {
     }
 
     fun privateKey(privateKey: PrivKey): EnrBuilder = also {
-        privateKey(Functions.createSecretKey(Bytes32.wrap(privateKey.raw())))
+        privateKey(privateKey.toDiscV5SecretKey())
     }
 
     fun privateKey(privateKey: SECP256K1.SecretKey): EnrBuilder = also {
