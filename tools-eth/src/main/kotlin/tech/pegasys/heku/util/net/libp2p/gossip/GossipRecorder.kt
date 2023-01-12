@@ -25,7 +25,7 @@ class GossipRecorder(
     val ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
 
-    internal data class JsonGossipWireEvent(
+    data class JsonGossipWireEvent(
         val time: MTime,
         val type: WireEventType,
         val source: EventSource,
@@ -39,7 +39,7 @@ class GossipRecorder(
         }
     }
 
-    internal data class JsonPreparedGossipMessageAndTopic(
+    data class JsonPreparedGossipMessageAndTopic(
         val time: MTime,
         val topic: String,
         @JsonSerialize(using = tech.pegasys.heku.util.json.BytesSerializer::class)
