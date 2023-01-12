@@ -76,7 +76,7 @@ class ExtTest {
     @Test
     fun `IntRange split test`() {
         assertThat(
-            (2..3).split(2)
+            (2..3).chunked(2)
         ).isEqualTo(
             listOf(
                 2..3
@@ -84,7 +84,7 @@ class ExtTest {
         )
 
         assertThat(
-            (2..3).split(3)
+            (2..3).chunked(3)
         ).isEqualTo(
             listOf(
                 2..3
@@ -92,7 +92,7 @@ class ExtTest {
         )
 
         assertThat(
-            (2..4).split(2)
+            (2..4).chunked(2)
         ).isEqualTo(
             listOf(
                 2..3,
@@ -101,7 +101,7 @@ class ExtTest {
         )
 
         assertThat(
-            (2..5).split(2)
+            (2..5).chunked(2)
         ).isEqualTo(
             listOf(
                 2..3,
@@ -110,7 +110,7 @@ class ExtTest {
         )
 
         assertThat(
-            (2..6).split(2)
+            (2..6).chunked(2)
         ).isEqualTo(
             listOf(
                 2..3,

@@ -2,12 +2,12 @@ package tech.pegasys.heku.util.ext
 
 import java.lang.Long.min
 
-fun IntRange.split(maxSize: Int): List<IntRange> =
+fun IntRange.chunked(maxSize: Int): List<IntRange> =
     LongRange(start.toLong(), endInclusive.toLong())
-        .split(maxSize)
+        .chunked(maxSize)
         .map { IntRange(it.first.toInt(), it.last.toInt()) }
 
-fun LongRange.split(maxSize: Int): List<LongRange> {
+fun LongRange.chunked(maxSize: Int): List<LongRange> {
     val ret = mutableListOf<LongRange>()
     var start = this.first
     while (start <= this.last) {

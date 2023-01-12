@@ -1,5 +1,6 @@
 dependencies {
     implementation project(":tools")
+    testImplementation project(":tools").sourceSets.test.output
 
     implementation 'com.googlecode.protobuf-java-format:protobuf-java-format'
 
