@@ -2,11 +2,10 @@ package tech.pegasys.heku.statedb.legacy
 
 import kotlinx.coroutines.runBlocking
 import tech.pegasys.heku.statedb.db.*
-import tech.pegasys.heku.statedb.db.IncSszStateLoader
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
-import tech.pegasys.heku.util.beacon.spec
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.type.Epoch
 import tech.pegasys.heku.util.type.asSlot
 import tech.pegasys.heku.util.type.epochs

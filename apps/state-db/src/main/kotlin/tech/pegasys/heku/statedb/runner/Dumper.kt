@@ -4,11 +4,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
-import org.apache.logging.log4j.Level
-import tech.pegasys.heku.statedb.db.*
+import tech.pegasys.heku.statedb.db.LevelDbFactory
+import tech.pegasys.heku.statedb.db.SimpleLevelDBDiffStorageFactory
+import tech.pegasys.heku.statedb.db.StateAppender
+import tech.pegasys.heku.statedb.db.StateStorageSchema
 import tech.pegasys.heku.statedb.ssz.cached
-import tech.pegasys.heku.util.beacon.spec
-import tech.pegasys.heku.util.config.startLogging
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.ext.getPrivateField
 import tech.pegasys.heku.util.log
 import tech.pegasys.heku.util.setDefaultExceptionHandler
@@ -142,7 +143,6 @@ class Dumper(
             .data { it.dataBasePath(Path.of(dataPath)) }
             .executionLayer { it.engineEndpoint("unsafe-test-stub") }
             .build()
-            .startLogging(Level.INFO)
 
         return TekuFacade.startBeaconNode(config)
     }

@@ -1,6 +1,6 @@
 package tech.pegasys.heku.statedb.ssz
 
-import tech.pegasys.heku.util.beacon.spec
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.teku.infrastructure.ssz.schema.SszContainerSchema
 import tech.pegasys.teku.infrastructure.ssz.tree.GIndexUtil
 import tech.pegasys.teku.spec.SpecMilestone

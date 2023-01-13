@@ -4,7 +4,7 @@ import tech.pegasys.heku.statedb.schema.Schema
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.statedb.ssz.IndexedSsz
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
-import tech.pegasys.heku.util.beacon.spec
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.type.asSlot
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconState
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconStateSchema

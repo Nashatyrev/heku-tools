@@ -1,8 +1,6 @@
 package tech.pegasys.heku.statedb.legacy
 
 import org.apache.logging.log4j.Level
-import tech.pegasys.heku.util.beacon.bls.BlsUtils
-import tech.pegasys.heku.util.config.startLogging
 import tech.pegasys.heku.util.ext.toBytes
 import tech.pegasys.heku.util.generatePrivateKeyFromSeed
 import tech.pegasys.heku.util.setDefaultExceptionHandler
@@ -26,8 +24,6 @@ class RunArchiveNode {
     fun run() {
         setDefaultExceptionHandler()
 
-        BlsUtils.globallyDisableBls()
-
         val config = TekuConfiguration.builder()
             .eth2NetworkConfig {
                 it
@@ -47,7 +43,6 @@ class RunArchiveNode {
             .executionLayer { it.engineEndpoint("unsafe-test-stub") }
             .sync { it.isSyncEnabled(true) }
             .build()
-            .startLogging(logLevel)
 
         val beaconNode = TekuFacade.startBeaconNode(config)
 

@@ -5,7 +5,7 @@ import tech.pegasys.heku.statedb.db.DiffId
 import tech.pegasys.heku.statedb.db.LevelDbFactory
 import tech.pegasys.heku.statedb.db.SimpleLevelDBDiffStorageFactory
 import tech.pegasys.heku.statedb.schema.StateId
-import tech.pegasys.heku.util.beacon.spec
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.log
 import tech.pegasys.heku.util.type.ETime
 import tech.pegasys.heku.util.type.Epoch

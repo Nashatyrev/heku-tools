@@ -2,28 +2,18 @@
 
 package tech.pegasys.heku.statedb.db
 
-import kotlinx.coroutines.runBlocking
-import tech.pegasys.heku.statedb.db.LevelDbFactory
-import tech.pegasys.heku.statedb.db.SimpleLevelDBDiffStorageFactory
-import tech.pegasys.heku.statedb.db.StateLoader
-import tech.pegasys.heku.statedb.db.StateStorageSchema
 import tech.pegasys.heku.statedb.schema.StateId
 import tech.pegasys.heku.statedb.ssz.IndexedSszSource
-import tech.pegasys.heku.util.beacon.spec
-import tech.pegasys.heku.util.ext.writeBytesT
-import tech.pegasys.heku.util.log
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.type.Epoch
 import tech.pegasys.heku.util.type.Slot
 import tech.pegasys.heku.util.type.asSlot
-import tech.pegasys.heku.util.type.epochs
 import tech.pegasys.teku.spec.SpecMilestone
 import tech.pegasys.teku.spec.datastructures.state.beaconstate.BeaconState
 import tech.pegasys.teku.spec.networks.Eth2Network
 import tech.pegasys.teku.storage.server.kvstore.KvStoreConfiguration
-import java.io.File
 import java.nio.file.Path
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
 
 class IncSszStateLoader(
     val eth2Network: Eth2Network = Eth2Network.MAINNET,

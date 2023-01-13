@@ -5,8 +5,7 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import org.apache.tuweni.bytes.Bytes
 import tech.pegasys.heku.statedb.db.StateLoader
-import tech.pegasys.heku.util.beacon.spec
-import tech.pegasys.heku.util.config.startLogging
+import tech.pegasys.heku.util.beacon.spec.spec
 import tech.pegasys.heku.util.ext.readBytesGzipped
 import tech.pegasys.heku.util.setDefaultExceptionHandler
 import tech.pegasys.heku.util.type.Epoch
@@ -96,7 +95,6 @@ class TekuDbStateLoader(
             .executionLayer { it.engineEndpoint("unsafe-test-stub") }
             .sync { it.isSyncEnabled(false) }
             .build()
-            .startLogging()
 
         TekuFacade.startBeaconNode(config)
     }
