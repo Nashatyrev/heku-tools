@@ -1,4 +1,4 @@
-package tech.pegasys.heku.util.net.netty
+package tech.pegasys.heku.util.netty
 
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandler.Sharable

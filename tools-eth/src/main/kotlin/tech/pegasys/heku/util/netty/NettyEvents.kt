@@ -1,4 +1,4 @@
-package tech.pegasys.heku.util.net.netty
+package tech.pegasys.heku.util.netty
 
 import io.netty.channel.ChannelId
 import tech.pegasys.heku.util.MTime
