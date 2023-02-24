@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
     id 'java'
     id 'io.spring.dependency-management' version '1.1.0'
     id 'maven-publish'
@@ -27,11 +27,13 @@ subprojects {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.languageVersion = "1.6"
+        kotlinOptions.jvmTarget = "11"
         kotlinOptions.freeCompilerArgs = ["-Xjvm-default=enable", "-Xopt-in=kotlin.RequiresOptIn"]
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.languageVersion = "1.6"
+        kotlinOptions.jvmTarget = "11"
     }
 
     dependencies {
