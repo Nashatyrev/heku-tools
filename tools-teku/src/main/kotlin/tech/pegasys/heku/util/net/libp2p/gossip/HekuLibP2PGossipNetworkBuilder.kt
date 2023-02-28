@@ -91,8 +91,8 @@ class HekuLibP2PGossipNetworkBuilder : LibP2PGossipNetworkBuilder() {
             }
         }
         val gossipRouter = builder.build()
-        gossipRouter.processIHaves = gossipProcessIHaves
-        gossipRouter.emitGossips = gossipEmitGossips
+//        gossipRouter.processIHaves = gossipProcessIHaves
+//        gossipRouter.emitGossips = gossipEmitGossips
 
         return gossipRouter
     }
