@@ -1,7 +1,6 @@
 dependencyManagement {
     dependencies {
 
-        dependency 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10'
         dependency 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.1'
         dependency 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.1'
 
@@ -28,7 +27,6 @@ dependencyManagement {
         // Libp2p
         dependency 'org.apache.tuweni:tuweni-crypto:2.2.0'
         dependency "tech.pegasys:noise-java:22.1.0"
-//        dependency("io.libp2p:jvm-libp2p-minimal:0.10.0-RELEASE")
         dependency("io.libp2p:jvm-libp2p-minimal:develop")
 
         // Discovery
