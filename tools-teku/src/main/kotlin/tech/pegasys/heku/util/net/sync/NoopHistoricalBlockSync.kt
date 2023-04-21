@@ -17,6 +17,8 @@ import tech.pegasys.teku.networking.p2p.network.P2PNetwork
 import tech.pegasys.teku.spec.Spec
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock
 import tech.pegasys.teku.spec.logic.common.util.AsyncBLSSignatureVerifier
+import tech.pegasys.teku.statetransition.blobs.BlobSidecarPool
+import tech.pegasys.teku.statetransition.blobs.BlobsSidecarManager
 import tech.pegasys.teku.statetransition.block.BlockImporter
 import tech.pegasys.teku.statetransition.util.PendingPool
 import tech.pegasys.teku.statetransition.validation.signatures.SignatureVerificationService
@@ -28,6 +30,7 @@ import java.util.*
 
 class NoopHistoricalBlockSync(
     spec: Spec?,
+    blobsSidecarManager: BlobsSidecarManager,
     metricsSystem: MetricsSystem?,
     storageUpdateChannel: StorageUpdateChannel?,
     asyncRunner: AsyncRunner?,
@@ -36,9 +39,11 @@ class NoopHistoricalBlockSync(
     syncStateProvider: SyncStateProvider?,
     signatureVerifier: AsyncBLSSignatureVerifier?,
     batchSize: UInt64?,
-    reconstructHistoricalStatesService: Optional<ReconstructHistoricalStatesService>?
+    reconstructHistoricalStatesService: Optional<ReconstructHistoricalStatesService>?,
+    fetchAllHistoricBlocks: Boolean
 ) : HistoricalBlockSyncService(
     spec,
+    blobsSidecarManager,
     metricsSystem,
     storageUpdateChannel,
     asyncRunner,
@@ -47,7 +52,8 @@ class NoopHistoricalBlockSync(
     syncStateProvider,
     signatureVerifier,
     batchSize,
-    reconstructHistoricalStatesService
+    reconstructHistoricalStatesService,
+    fetchAllHistoricBlocks
 ) {
     override fun doStart(): SafeFuture<*> = SafeFuture.COMPLETE
     override fun doStop(): SafeFuture<*> = SafeFuture.COMPLETE
@@ -65,7 +71,9 @@ class NoHistoricalBlockSyncServiceFactory(
     storageUpdateChannel: StorageUpdateChannel?,
     p2pNetwork: Eth2P2PNetwork?,
     blockImporter: BlockImporter?,
+    blobsSidecarManager: BlobsSidecarManager,
     pendingBlocks: PendingPool<SignedBeaconBlock>?,
+    blobSidecarPool: BlobSidecarPool,
     getStartupTargetPeerCount: Int,
     signatureVerifier: SignatureVerificationService?,
     startupTimeout: Duration?,
@@ -82,7 +90,9 @@ class NoHistoricalBlockSyncServiceFactory(
     storageUpdateChannel,
     p2pNetwork,
     blockImporter,
+    blobsSidecarManager,
     pendingBlocks,
+    blobSidecarPool,
     getStartupTargetPeerCount,
     signatureVerifier,
     startupTimeout,
@@ -91,6 +101,7 @@ class NoHistoricalBlockSyncServiceFactory(
 
     val noopHistoricalBlockSync = NoopHistoricalBlockSync(
         spec,
+        blobsSidecarManager,
         metrics,
         storageUpdateChannel,
         asyncRunnerFactory.create(HistoricalBlockSyncService::class.java.simpleName, 1),
@@ -99,7 +110,8 @@ class NoHistoricalBlockSyncServiceFactory(
         null,
         signatureVerifier,
         UInt64.valueOf(50L),
-        Optional.empty()
+        Optional.empty(),
+        false
     )
 
     override fun createHistoricalSyncService(syncStateProvider: SyncStateProvider): HistoricalBlockSyncService =
