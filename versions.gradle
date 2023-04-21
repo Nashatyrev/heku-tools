@@ -16,5 +16,49 @@ dependencyManagement {
         dependency 'org.assertj:assertj-core:3.22.0'
 
         dependency 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+
+        dependencySet(group: 'org.apache.logging.log4j', version: '2.19.0') {
+            entry 'log4j-api'
+            entry 'log4j-core'
+            entry 'log4j-slf4j-impl'
+        }
+
+
+        // Libp2p
+        dependency 'org.apache.tuweni:tuweni-crypto:2.2.0'
+        dependency "tech.pegasys:noise-java:22.1.0"
+        dependency("io.libp2p:jvm-libp2p-minimal:develop")
+
+        // Discovery
+        dependency("tech.pegasys.discovery:discovery:develop")
+        dependency 'io.projectreactor:reactor-core:3.4.14'
+
+        // Besu
+        dependency 'org.hyperledger.besu.internal:metrics-core:22.4.2'
+        dependency 'org.hyperledger.besu:plugin-api:22.4.2'
+
+        // Teku
+        dependencySet(group: 'tech.pegasys.teku.internal', version: 'develop') {
+            entry 'teku'
+            entry 'eth2'
+            entry 'spec'
+            entry 'networks'
+            entry 'async'
+            entry 'unsigned'
+            entry 'beaconchain'
+            entry 'serviceutils'
+            entry 'storage'
+            entry 'storage-api'
+            entry 'logging'
+            entry 'version'
+            entry 'infrastructure-events'
+            entry 'ethereum-events'
+            entry 'statetransition'
+            entry 'metrics'
+            entry 'executionlayer'
+            entry 'execution-types'
+            entry 'io'
+            entry 'sync'
+        }
     }
 }
