@@ -2,9 +2,13 @@ package tech.pegasys.heku.util.net.libp2p
 
 import io.libp2p.core.Host
 import io.libp2p.core.PeerId
+import io.libp2p.core.crypto.PrivKey
 import io.libp2p.core.dsl.BuilderJ
+import io.libp2p.core.dsl.SecureChannelCtor
 import io.libp2p.core.multistream.ProtocolBinding
+import io.libp2p.core.mux.StreamMuxer
 import io.libp2p.core.mux.StreamMuxerProtocol
+import io.libp2p.core.security.SecureChannel
 import io.libp2p.security.noise.NoiseXXSecureChannel
 import io.libp2p.transport.tcp.TcpTransport
 import io.netty.handler.logging.LogLevel
@@ -33,7 +37,7 @@ class HekuLibP2PNetworkBuilder : LibP2PNetworkBuilder() {
     val preparedGossipMessageFactory get() = preparedGossipMessageFactory
     val gossipTopicFilter get() = gossipTopicFilter
     val firewall get() = firewall
-    val mplexFirewall get() = mplexFirewall
+    val muxFirewall get() = muxFirewall
     var gossipNetwork get() = gossipNetwork
         set(value) { gossipNetwork = value }
     val hostBuilderDefaults get() = hostBuilderDefaults
@@ -44,7 +48,7 @@ class HekuLibP2PNetworkBuilder : LibP2PNetworkBuilder() {
     var peerManager get() = peerManager
         set(value) { peerManager = value }
 
-    var createRpcHandlersHook: () -> MutableList<RpcHandler<*, *, *>> = { super.createRpcHandlers() }
+    var createRpcHandlersHook: () -> MutableList<out RpcHandler<*, *, *>> = { super.createRpcHandlers() }
     var createGossipNetworkHook: () -> LibP2PGossipNetwork = { super.createGossipNetwork() }
     var createPeerManagerHook: () -> PeerManager = { super.createPeerManager() }
 
@@ -59,7 +63,7 @@ class HekuLibP2PNetworkBuilder : LibP2PNetworkBuilder() {
 
     override fun build(): P2PNetwork<Peer> = buildHook()
 
-    override fun createRpcHandlers(): MutableList<RpcHandler<*, *, *>> = createRpcHandlersHook()
+    override fun createRpcHandlers(): MutableList<out RpcHandler<*, *, *>> = createRpcHandlersHook()
 
     override fun createGossipNetwork(): LibP2PGossipNetwork = createGossipNetworkHook()
 
@@ -85,7 +89,7 @@ class HekuLibP2PNetworkBuilder : LibP2PNetworkBuilder() {
         with(hostBuilder) {
             identity.factory = { privKey }
             transports.add { TcpTransport(it) }
-            secureChannels.add { NoiseXXSecureChannel(it) }
+            secureChannels.add { privKey, _ -> NoiseXXSecureChannel(privKey) }
             muxers.add(StreamMuxerProtocol.Mplex)
             network.listen(listenAddr.toString())
             protocols.addAll(getDefaultProtocols(privKey.publicKey(), advertisedAddr) as List<ProtocolBinding<Any>>)
@@ -102,7 +106,7 @@ class HekuLibP2PNetworkBuilder : LibP2PNetworkBuilder() {
                 debug.muxFramesHandler.addLogger(LogLevel.DEBUG, "wire.mux")
             }
             connectionHandlers.add(peerManager)
-            debug.muxFramesHandler.addHandler(mplexFirewall)
+            debug.muxFramesHandler.addHandler(muxFirewall)
         }
 
         hostBuilderPostModifier(hostBuilder)

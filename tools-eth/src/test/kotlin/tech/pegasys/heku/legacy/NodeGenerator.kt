@@ -1,6 +1,6 @@
 package tech.pegasys.heku.util
 
-import io.libp2p.core.crypto.KEY_TYPE
+import io.libp2p.core.crypto.KeyType
 import io.libp2p.core.crypto.generateKeyPair
 import org.apache.tuweni.bytes.Bytes32
 import tech.pegasys.heku.util.ext.toBytes
@@ -28,4 +28,4 @@ fun generateByNodeId(filter: (DiscNodeId) -> Boolean) =
     generateKeys().filter { filter(it.second.toNodeId()) }
 
 
-fun generateKeys() = generateSequence() { generateKeyPair(KEY_TYPE.SECP256K1) }
+fun generateKeys() = generateSequence() { generateKeyPair(KeyType.SECP256K1) }

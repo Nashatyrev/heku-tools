@@ -23,11 +23,14 @@ dependencyManagement {
             entry 'log4j-slf4j-impl'
         }
 
+        dependencySet(group: 'io.netty', version: '4.1.97.Final') {
+            entry 'netty-handler'
+        }
 
         // Libp2p
         dependency 'org.apache.tuweni:tuweni-crypto:2.2.0'
         dependency "tech.pegasys:noise-java:22.1.0"
-        dependency("io.libp2p:jvm-libp2p-minimal:develop")
+        dependency("io.libp2p:jvm-libp2p:1.0.1-RELEASE")
 
         // Discovery
         dependency("tech.pegasys.discovery:discovery:develop")
@@ -38,7 +41,7 @@ dependencyManagement {
         dependency 'org.hyperledger.besu:plugin-api:22.4.2'
 
         // Teku
-        dependencySet(group: 'tech.pegasys.teku.internal', version: 'develop') {
+        dependencySet(group: 'tech.pegasys.teku.internal', version: '23.9.1') {
             entry 'teku'
             entry 'eth2'
             entry 'spec'

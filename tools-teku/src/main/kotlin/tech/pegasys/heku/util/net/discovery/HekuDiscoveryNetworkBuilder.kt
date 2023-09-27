@@ -4,6 +4,7 @@ import org.hyperledger.besu.plugin.services.MetricsSystem
 import tech.pegasys.teku.infrastructure.async.AsyncRunner
 import tech.pegasys.teku.infrastructure.async.SafeFuture
 import tech.pegasys.teku.networking.p2p.connection.ConnectionManager
+import tech.pegasys.teku.networking.p2p.connection.PeerPools
 import tech.pegasys.teku.networking.p2p.connection.PeerSelectionStrategy
 import tech.pegasys.teku.networking.p2p.discovery.DiscoveryNetworkBuilder
 import tech.pegasys.teku.networking.p2p.discovery.DiscoveryPeer
@@ -27,7 +28,8 @@ class HekuDiscoveryNetworkBuilder : DiscoveryNetworkBuilder() {
                 asyncRunner,
                 p2pNetwork,
                 peerSelectionStrategy,
-                mutableListOf()
+                mutableListOf(),
+                peerPools
             )
         }
     }
@@ -39,14 +41,16 @@ class NoopConnectionManager(
     asyncRunner: AsyncRunner?,
     network: P2PNetwork<out Peer>?,
     peerSelectionStrategy: PeerSelectionStrategy?,
-    peerAddresses: MutableList<PeerAddress>?
+    peerAddresses: MutableList<PeerAddress>?,
+    peerPools: PeerPools
 ) : ConnectionManager(
     metricsSystem,
     discoveryService,
     asyncRunner,
     network,
     peerSelectionStrategy,
-    peerAddresses
+    peerAddresses,
+    peerPools
 ) {
     override fun doStart(): SafeFuture<*> {
         return SafeFuture.completedFuture(null)

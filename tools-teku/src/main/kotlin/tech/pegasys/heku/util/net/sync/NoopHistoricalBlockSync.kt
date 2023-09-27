@@ -17,8 +17,8 @@ import tech.pegasys.teku.networking.p2p.network.P2PNetwork
 import tech.pegasys.teku.spec.Spec
 import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock
 import tech.pegasys.teku.spec.logic.common.util.AsyncBLSSignatureVerifier
+import tech.pegasys.teku.statetransition.blobs.BlobSidecarManager
 import tech.pegasys.teku.statetransition.blobs.BlobSidecarPool
-import tech.pegasys.teku.statetransition.blobs.BlobsSidecarManager
 import tech.pegasys.teku.statetransition.block.BlockImporter
 import tech.pegasys.teku.statetransition.util.PendingPool
 import tech.pegasys.teku.statetransition.validation.signatures.SignatureVerificationService
@@ -30,7 +30,7 @@ import java.util.*
 
 class NoopHistoricalBlockSync(
     spec: Spec?,
-    blobsSidecarManager: BlobsSidecarManager,
+    blobsSidecarManager: BlobSidecarManager,
     metricsSystem: MetricsSystem?,
     storageUpdateChannel: StorageUpdateChannel?,
     asyncRunner: AsyncRunner?,
@@ -71,7 +71,7 @@ class NoHistoricalBlockSyncServiceFactory(
     storageUpdateChannel: StorageUpdateChannel?,
     p2pNetwork: Eth2P2PNetwork?,
     blockImporter: BlockImporter?,
-    blobsSidecarManager: BlobsSidecarManager,
+    blobsSidecarManager: BlobSidecarManager,
     pendingBlocks: PendingPool<SignedBeaconBlock>?,
     blobSidecarPool: BlobSidecarPool,
     getStartupTargetPeerCount: Int,

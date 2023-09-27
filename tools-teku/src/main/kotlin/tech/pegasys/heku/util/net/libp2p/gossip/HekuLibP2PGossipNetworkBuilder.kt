@@ -81,7 +81,7 @@ class HekuLibP2PGossipNetworkBuilder : LibP2PGossipNetworkBuilder() {
                         payload
                     )
                 }
-                .orElse(defaultMessageFactory.create(topic, payload))
+                .orElse(defaultMessageFactory.create(topic, payload, networkingSpecConfig))
             PreparedPubsubMessage(msg, preparedMessage)
         }
         builder.messageValidator = GossipWireValidator()

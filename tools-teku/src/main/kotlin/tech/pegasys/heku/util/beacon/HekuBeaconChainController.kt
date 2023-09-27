@@ -1,5 +1,6 @@
 package tech.pegasys.heku.util.beacon
 
+import org.hyperledger.besu.plugin.services.MetricsSystem
 import tech.pegasys.heku.util.net.sync.NoHistoricalBlockSyncServiceFactory
 import tech.pegasys.teku.beacon.sync.SyncServiceFactory
 import tech.pegasys.teku.ethereum.events.SlotEventsChannel
@@ -14,7 +15,7 @@ import tech.pegasys.teku.networking.p2p.libp2p.LibP2PNetworkBuilder
 import tech.pegasys.teku.service.serviceutils.ServiceConfig
 import tech.pegasys.teku.services.beaconchain.BeaconChainConfiguration
 import tech.pegasys.teku.spec.Spec
-import tech.pegasys.teku.spec.datastructures.attestation.ValidateableAttestation
+import tech.pegasys.teku.spec.datastructures.attestation.ValidatableAttestation
 import tech.pegasys.teku.spec.datastructures.operations.Attestation
 import tech.pegasys.teku.spec.logic.common.util.AsyncBLSSignatureVerifier
 import tech.pegasys.teku.statetransition.attestation.AttestationManager
@@ -72,7 +73,7 @@ class HekuBeaconChainController(
                 eventChannels.getPublisher(StorageUpdateChannel::class.java, beaconAsyncRunner),
                 this.p2pNetwork,
                 this.blockImporter,
-                this.blobsSidecarManager,
+                this.blobSidecarManager,
                 this.pendingBlocks,
                 this.blobSidecarPool,
                 this.beaconConfig.eth2NetworkConfig().startupTargetPeerCount,
@@ -82,13 +83,20 @@ class HekuBeaconChainController(
             )
 
     override fun initAttestationManager() {
+        val pendingAttestations = poolFactory.createPendingPoolForAttestations(spec)
+        val futureAttestations = FutureItems.create(
+            { obj: ValidatableAttestation -> obj.earliestSlotForForkChoiceProcessing },
+            UInt64.valueOf(3),
+            futureItemsMetric,
+            "attestations"
+        )
         val attestationValidator =
             if (validateAttestations)
-                AttestationValidator(spec, recentChainData, signatureVerificationService)
+                AttestationValidator(spec, recentChainData, signatureVerificationService, metricsSystem)
             else
-                NoopAttestationValidator(spec, recentChainData, signatureVerificationService)
+                NoopAttestationValidator(spec, recentChainData, signatureVerificationService, metricsSystem)
 
-        val aggregateAttestationValidator =
+        val aggregateValidator =
             if (validateAttestations)
                 AggregateAttestationValidator(spec, attestationValidator, signatureVerificationService)
             else
@@ -97,25 +105,18 @@ class HekuBeaconChainController(
         blockImporter.subscribeToVerifiedBlockAttestations { slot: UInt64?, attestations: SszList<Attestation?> ->
             attestations.forEach(
                 Consumer { attestation: Attestation? ->
-                    aggregateAttestationValidator.addSeenAggregate(
-                        ValidateableAttestation.from(spec, attestation)
+                    aggregateValidator.addSeenAggregate(
+                        ValidatableAttestation.from(spec, attestation)
                     )
                 })
         }
-        val pendingAttestations = pendingPoolFactory.createForAttestations(spec)
-        val futureAttestations = FutureItems.create(
-            { obj: ValidateableAttestation -> obj.earliestSlotForForkChoiceProcessing },
-            UInt64.valueOf(3),
-            futureItemsMetric,
-            "attestations"
-        )
         attestationManager = AttestationManager.create(
             pendingAttestations,
             futureAttestations,
             forkChoice,
             attestationPool,
             attestationValidator,
-            aggregateAttestationValidator,
+            aggregateValidator,
             signatureVerificationService,
             eventChannels.getPublisher(ActiveValidatorChannel::class.java, beaconAsyncRunner)
         )
@@ -137,9 +138,10 @@ class HekuBeaconChainController(
     internal class NoopAttestationValidator(
         spec: Spec,
         recentChainData: RecentChainData,
-        signatureVerifier: AsyncBLSSignatureVerifier
-    ) : AttestationValidator(spec, recentChainData, signatureVerifier) {
-        override fun validate(validateableAttestation: ValidateableAttestation?): SafeFuture<InternalValidationResult> =
+        signatureVerifier: AsyncBLSSignatureVerifier,
+        metricsSystem: MetricsSystem
+    ) : AttestationValidator(spec, recentChainData, signatureVerifier, metricsSystem) {
+        override fun validate(validateableAttestation: ValidatableAttestation?): SafeFuture<InternalValidationResult> =
             SafeFuture.completedFuture(InternalValidationResult.ACCEPT)
     }
 
@@ -149,9 +151,9 @@ class HekuBeaconChainController(
         signatureVerifier: AsyncBLSSignatureVerifier
     ) : AggregateAttestationValidator(spec, attestationValidator, signatureVerifier) {
 
-        override fun addSeenAggregate(attestation: ValidateableAttestation) { }
+        override fun addSeenAggregate(attestation: ValidatableAttestation) { }
 
-        override fun validate(attestation: ValidateableAttestation?): SafeFuture<InternalValidationResult> =
+        override fun validate(attestation: ValidatableAttestation?): SafeFuture<InternalValidationResult> =
             SafeFuture.completedFuture(InternalValidationResult.ACCEPT)
     }
 }

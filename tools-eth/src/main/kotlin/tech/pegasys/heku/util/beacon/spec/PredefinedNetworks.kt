@@ -21,17 +21,9 @@ class PredefinedNetworks {
                 UInt64.valueOf(1616508000),
                 Bytes32.fromHexString("0x043db0d9a83813551ee2f33450d23797757d430911a9320530ad8a0eabc43efb")
             ),
-            ROPSTEN to GenesisData(
-                UInt64.valueOf(1653922800),
-                Bytes32.fromHexString("0x44f1e56283ca88b35c789f7f449e52339bc1fefe3a45913a43a6d16edcd33cf1")
-            ),
             SEPOLIA to GenesisData(
                 UInt64.valueOf(1655733600),
                 Bytes32.fromHexString("0xd8ea171f3c94aea21ebc42a1ed61052acf3f9209c00e4efbaaddac09ed9b8078")
-            ),
-            KILN to GenesisData(
-                UInt64.valueOf(1647007500),
-                Bytes32.fromHexString("0x99b09fcd43e5905236c370f184056bec6e6638cfc31a323b304fc4aa789cb4ad")
             ),
             GNOSIS to GenesisData(
                 UInt64.valueOf(1638993340),

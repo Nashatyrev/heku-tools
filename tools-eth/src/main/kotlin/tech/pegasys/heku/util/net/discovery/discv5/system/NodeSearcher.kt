@@ -1,7 +1,5 @@
 package tech.pegasys.heku.util.net.discovery.discv5.system
 
-import io.libp2p.core.crypto.KEY_TYPE
-import io.libp2p.core.crypto.generateKeyPair
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*

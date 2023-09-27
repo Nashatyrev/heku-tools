@@ -12,9 +12,7 @@ import java.util.*
 private val NETWORKS_STARTED = listOf(
     Eth2Network.MAINNET,
     Eth2Network.PRATER,
-    Eth2Network.ROPSTEN,
     Eth2Network.SEPOLIA,
-    Eth2Network.KILN,
     Eth2Network.GNOSIS
 )
 
