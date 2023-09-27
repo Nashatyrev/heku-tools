@@ -3,14 +3,11 @@ dependencies {
     implementation project(":tools")
     implementation project(":tools-eth")
 
+    // !!!! Needs the version from barnch https://github.com/Nashatyrev/teku/tree/hack/state-db
     def tekuVersion = "develop"
-    def besuVersion = "22.4.2"
-    def discoveryVersion = "develop"
-    def libp2pVersion = "develop"
-    def log4jVersion = "2.17.2"
 
-    implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
-    implementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
+    implementation "org.apache.logging.log4j:log4j-api"
+    implementation "org.apache.logging.log4j:log4j-core"
 
     implementation 'org.fusesource.leveldbjni:leveldbjni-win64:1.8'
     implementation 'org.fusesource.leveldbjni:leveldbjni-win32:1.8'
@@ -18,21 +15,8 @@ dependencies {
 
     // Teku, Discovery, Libp2p, Besu API dependencies
 
-    implementation("io.libp2p:jvm-libp2p-minimal:$libp2pVersion") {
-        force = true
-    }
-    implementation "tech.pegasys:noise-java:22.1.0"
+    implementation("io.libp2p:jvm-libp2p")
     implementation 'org.apache.tuweni:tuweni-crypto:2.2.0'
-    implementation("tech.pegasys.discovery:discovery:$discoveryVersion") {
-        force = true
-    }
-
-    // Discovery
-    implementation 'io.projectreactor:reactor-core:3.4.14'
-
-    // Besu
-    implementation "org.hyperledger.besu.internal:metrics-core:$besuVersion"
-    implementation "org.hyperledger.besu:plugin-api:$besuVersion"
 
     // Teku
     implementation "tech.pegasys.teku.internal:teku:${tekuVersion}"
@@ -41,9 +25,9 @@ dependencies {
     implementation "tech.pegasys.teku.internal:beaconchain:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:serviceutils:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:storage:${tekuVersion}"
+    implementation "tech.pegasys.teku.internal:storage-api:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:networks:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:sync:${tekuVersion}"
-    implementation "tech.pegasys.teku.internal:storage-api:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:async:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:logging:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:unsigned:${tekuVersion}"
@@ -56,9 +40,6 @@ dependencies {
     implementation "tech.pegasys.teku.internal:execution-types:${tekuVersion}"
     implementation "tech.pegasys.teku.internal:io:${tekuVersion}"
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testImplementation 'org.assertj:assertj-core:3.22.0'
-
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'org.assertj:assertj-core'
 }

@@ -3,5 +3,7 @@ rootProject.name = 'heku-tools'
 include 'tools'
 include 'tools-eth'
 include 'tools-teku'
-include 'apps:state-db'
+
+// excluded as needs custom Teku version from barnch https://github.com/Nashatyrev/teku/tree/hack/state-db
+//include 'apps:state-db'
 
