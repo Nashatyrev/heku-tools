@@ -62,6 +62,10 @@ dependencyManagement {
             entry 'execution-types'
             entry 'io'
             entry 'sync'
+            entry 'pow'
+            entry 'validator'
+            entry 'validator-api'
+//            entry 'spec-test-fixtures'
         }
     }
 }
