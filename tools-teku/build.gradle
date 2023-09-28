@@ -46,4 +46,10 @@ dependencies {
     implementation "tech.pegasys.teku.internal:executionlayer"
     implementation "tech.pegasys.teku.internal:execution-types"
     implementation "tech.pegasys.teku.internal:io"
+
+    testImplementation "tech.pegasys.teku.internal:pow"
+    testImplementation "tech.pegasys.teku.internal:validator"
+    testImplementation "tech.pegasys.teku.internal:validator-api"
+
+//    implementation(testFixtures("tech.pegasys.teku.internal:spec:23.9.1"))
 }

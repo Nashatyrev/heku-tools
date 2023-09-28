@@ -3,3 +3,4 @@ out/
 .gradle/
 .idea/
 /work.dir/
+/tools-teku/work.dir/
