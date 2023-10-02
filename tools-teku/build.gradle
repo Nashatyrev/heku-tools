@@ -44,6 +44,7 @@ dependencies {
     implementation "tech.pegasys.teku.internal:statetransition"
     implementation "tech.pegasys.teku.internal:metrics"
     implementation "tech.pegasys.teku.internal:executionlayer"
+    implementation "tech.pegasys.teku.internal:ethereum-executionlayer"
     implementation "tech.pegasys.teku.internal:execution-types"
     implementation "tech.pegasys.teku.internal:io"
 
