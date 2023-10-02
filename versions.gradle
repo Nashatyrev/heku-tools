@@ -41,7 +41,8 @@ dependencyManagement {
         dependency 'org.hyperledger.besu:plugin-api:22.4.2'
 
         // Teku
-        dependencySet(group: 'tech.pegasys.teku.internal', version: '23.9.1') {
+//        dependencySet(group: 'tech.pegasys.teku.internal', version: '23.9.1') {
+        dependencySet(group: 'tech.pegasys.teku.internal', version: 'develop') {
             entry 'teku'
             entry 'eth2'
             entry 'spec'
@@ -59,6 +60,7 @@ dependencyManagement {
             entry 'statetransition'
             entry 'metrics'
             entry 'executionlayer'
+            entry 'ethereum-executionlayer'
             entry 'execution-types'
             entry 'io'
             entry 'sync'
