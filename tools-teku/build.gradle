@@ -1,12 +1,12 @@
 dependencies {
-    implementation project(":tools")
-    implementation project(":tools-eth")
+    api project(":tools")
+    api project(":tools-eth")
     testImplementation project(":tools").sourceSets.test.output
 
-    implementation 'com.googlecode.protobuf-java-format:protobuf-java-format'
+    api 'com.googlecode.protobuf-java-format:protobuf-java-format'
 
-    implementation "org.apache.logging.log4j:log4j-api"
-    implementation "org.apache.logging.log4j:log4j-core"
+    api "org.apache.logging.log4j:log4j-api"
+    api "org.apache.logging.log4j:log4j-core"
 
     implementation("io.libp2p:jvm-libp2p")
     implementation "tech.pegasys:noise-java"
@@ -18,31 +18,31 @@ dependencies {
     implementation 'io.projectreactor:reactor-core'
 
     // Besu
-    implementation "org.hyperledger.besu.internal:metrics-core"
-    implementation "org.hyperledger.besu:plugin-api"
+    api "org.hyperledger.besu.internal:metrics-core"
+    api "org.hyperledger.besu:plugin-api"
 
     // Teku
-    implementation "tech.pegasys.teku.internal:teku"
-    implementation "tech.pegasys.teku.internal:eth2"
-    implementation "tech.pegasys.teku.internal:spec"
-    implementation "tech.pegasys.teku.internal:beaconchain"
-    implementation "tech.pegasys.teku.internal:serviceutils"
-    implementation "tech.pegasys.teku.internal:storage"
-    implementation "tech.pegasys.teku.internal:networks"
-    implementation "tech.pegasys.teku.internal:sync"
-    implementation "tech.pegasys.teku.internal:storage-api"
-    implementation "tech.pegasys.teku.internal:async"
-    implementation "tech.pegasys.teku.internal:logging"
-    implementation "tech.pegasys.teku.internal:unsigned"
-    implementation "tech.pegasys.teku.internal:version"
-    implementation "tech.pegasys.teku.internal:infrastructure-events"
-    implementation "tech.pegasys.teku.internal:ethereum-events"
-    implementation "tech.pegasys.teku.internal:statetransition"
-    implementation "tech.pegasys.teku.internal:metrics"
-    implementation "tech.pegasys.teku.internal:executionlayer"
-    implementation "tech.pegasys.teku.internal:ethereum-executionlayer"
-    implementation "tech.pegasys.teku.internal:execution-types"
-    implementation "tech.pegasys.teku.internal:io"
+    api "tech.pegasys.teku.internal:teku"
+    api "tech.pegasys.teku.internal:eth2"
+    api "tech.pegasys.teku.internal:spec"
+    api "tech.pegasys.teku.internal:beaconchain"
+    api "tech.pegasys.teku.internal:serviceutils"
+    api "tech.pegasys.teku.internal:storage"
+    api "tech.pegasys.teku.internal:networks"
+    api "tech.pegasys.teku.internal:sync"
+    api "tech.pegasys.teku.internal:storage-api"
+    api "tech.pegasys.teku.internal:async"
+    api "tech.pegasys.teku.internal:logging"
+    api "tech.pegasys.teku.internal:unsigned"
+    api "tech.pegasys.teku.internal:version"
+    api "tech.pegasys.teku.internal:infrastructure-events"
+    api "tech.pegasys.teku.internal:ethereum-events"
+    api "tech.pegasys.teku.internal:statetransition"
+    api "tech.pegasys.teku.internal:metrics"
+    api "tech.pegasys.teku.internal:executionlayer"
+    api "tech.pegasys.teku.internal:ethereum-executionlayer"
+    api "tech.pegasys.teku.internal:execution-types"
+    api "tech.pegasys.teku.internal:io"
 
     testImplementation "tech.pegasys.teku.internal:pow"
     testImplementation "tech.pegasys.teku.internal:validator"

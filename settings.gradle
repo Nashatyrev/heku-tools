@@ -7,3 +7,5 @@ include 'tools-teku'
 // excluded as needs custom Teku version from barnch https://github.com/Nashatyrev/teku/tree/hack/state-db
 //include 'apps:state-db'
 
+include 'apps:linea'
+
