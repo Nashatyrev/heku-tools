@@ -1,4 +1,4 @@
-package tech.pegasys.heku.samples
+package tech.consensys.linea
 
 import org.apache.tuweni.bytes.Bytes32
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManager
