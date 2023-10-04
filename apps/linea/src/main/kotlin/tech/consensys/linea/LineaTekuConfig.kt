@@ -13,13 +13,10 @@ import tech.pegasys.teku.cli.subcommand.internal.validator.tools.EncryptedKeysto
 import tech.pegasys.teku.config.TekuConfiguration
 import tech.pegasys.teku.ethereum.executionlayer.BuilderCircuitBreaker
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManagerStub
-import tech.pegasys.teku.infrastructure.async.SafeFuture
-import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.networking.eth2.gossip.GossipFailureLogger
+import tech.pegasys.teku.service.serviceutils.ServiceConfig
 import tech.pegasys.teku.spec.Spec
 import tech.pegasys.teku.spec.TestSpecFactory
-import tech.pegasys.teku.spec.datastructures.execution.ExecutionPayloadContext
-import tech.pegasys.teku.spec.datastructures.execution.GetPayloadResponse
 import tech.pegasys.teku.spec.datastructures.interop.GenesisStateBuilder
 import tech.pegasys.teku.spec.networks.Eth2Network
 import tech.pegasys.teku.storage.server.StateStorageMode
@@ -30,24 +27,22 @@ import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Optional
 
-class WannaSkipABlockException : RuntimeException("EL wants to skip a block")
-
 class RunSequencerNode {
     companion object {
 
         @JvmStatic
         fun main(vararg args: String) {
-            SimpleTekuNode().runSequencerTekuNode(false)
+            LineaTekuConfig().runSequencerTekuNode(false)
         }
     }
 }
 
-class RunClientNode {
+class RunClientNode1 {
     companion object {
 
         @JvmStatic
         fun main(vararg args: String) {
-            SimpleTekuNode().runClientTekuNode(1)
+            LineaTekuConfig().runClientTekuNode(1)
         }
     }
 }
@@ -57,7 +52,7 @@ class RunClientNode2 {
 
         @JvmStatic
         fun main(vararg args: String) {
-            SimpleTekuNode().runClientTekuNode(2)
+            LineaTekuConfig().runClientTekuNode(2)
         }
     }
 }
@@ -67,15 +62,13 @@ class RunClientNode3 {
 
         @JvmStatic
         fun main(vararg args: String) {
-            SimpleTekuNode().runClientTekuNode(2)
+            LineaTekuConfig().runClientTekuNode(3)
         }
     }
 }
 
 
-class SimpleTekuNode {
-    val random = SecureRandom(byteArrayOf())
-
+class LineaTekuConfig {
     val validatorsCount = 1
     val genesisTime = System.currentTimeMillis() / 1000
     val spec: Spec = TestSpecFactory.createMinimalBellatrix {
@@ -90,8 +83,6 @@ class SimpleTekuNode {
             }
     }
     val validatorDepositAmount = spec.genesisSpecConfig.maxEffectiveBalance * 100
-    val validatorKeys = List(validatorsCount) { BLSKeyPair.random(random) }
-
     val stateStorageMode = StateStorageMode.PRUNE
 
     val workDir = "./work.dir/linea"
@@ -100,30 +91,18 @@ class SimpleTekuNode {
     val validatorKeyPass = "1234"
     val sequencerNodeEnrFile = "$workDir/sequencer-enr.txt"
 
-//    val advertisedIp = "127.0.0.1"
+    //    val advertisedIp = "127.0.0.1"
     val advertisedIp = "10.150.1.122"
 
-    fun runSequencerTekuNode(
-        resetGenesisOnSequencerStart: Boolean
-    ) {
-        val port: Int = 9004
-        val dataPath: String = "$workDir/data-seq"
+    val random = SecureRandom(byteArrayOf())
+    val validatorKeys = List(validatorsCount) { BLSKeyPair.random(random) }
+
+    fun TekuConfiguration.Builder.applyCommonOptions(
+        port: Int,
+        dataPath: String
+    ): TekuConfiguration.Builder = apply {
         val nodePrivKey = generatePrivateKeyFromSeed(port.toLong())
-        val logLevel = Level.DEBUG
-
-        setDefaultExceptionHandler()
-
-        if (resetGenesisOnSequencerStart) {
-            File(workDir).also {
-                it.deleteRecursively()
-                it.mkdirs()
-            }
-
-            writeGenesis()
-            writeValidatorKeys()
-        }
-
-        val config = TekuConfiguration.builder()
+        this
             .eth2NetworkConfig {
                 it
                     .applyNetworkDefaults(Eth2Network.MINIMAL)
@@ -139,7 +118,6 @@ class SimpleTekuNode {
                 it
                     .listenPort(port)
                     .advertisedIp(Optional.of(advertisedIp))
-                    .networkInterface(advertisedIp)
                     .setPrivateKeySource { nodePrivKey.bytes().toBytes() }
             }
             .data {
@@ -150,6 +128,33 @@ class SimpleTekuNode {
                 it
                     .dataStorageMode(stateStorageMode)
             }
+            .executionLayer {
+                it
+                    .engineEndpoint("unsafe-test-stub")
+            }
+    }
+
+    fun runSequencerTekuNode(
+        resetGenesisOnSequencerStart: Boolean
+    ) {
+        val port: Int = 9004
+        val dataPath: String = "$workDir/data-seq"
+        val logLevel = Level.DEBUG
+
+        setDefaultExceptionHandler()
+
+        if (resetGenesisOnSequencerStart || !File(genesisFile).exists()) {
+            File(workDir).also {
+                it.deleteRecursively()
+                it.mkdirs()
+            }
+
+            writeGenesis()
+            writeValidatorKeys()
+        }
+
+        val config = TekuConfiguration.builder()
+            .applyCommonOptions(port, dataPath)
             .validator {
                 it
                     .validatorKeys(listOf("$validatorKeysDir;$validatorKeysDir"))
@@ -158,28 +163,10 @@ class SimpleTekuNode {
             }
             .executionLayer {
                 it
-                    .engineEndpoint("unsafe-test-stub")
                     .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
-                        LoggingExecutionLayerManager(
-                            object : ExecutionLayerManagerStub(
-                                spec,
-                                serviceConfig.timeProvider,
-                                true,
-                                Optional.empty(),
-                                BuilderCircuitBreaker.NOOP
-                            ) {
-                                override fun engineGetPayload(
-                                    executionPayloadContext: ExecutionPayloadContext,
-                                    slot: UInt64
-                                ): SafeFuture<GetPayloadResponse> {
-                                    return if (slot.longValue() % 5 == 0L) {
-                                        SafeFuture.failedFuture(WannaSkipABlockException())
-                                    } else {
-                                        super.engineGetPayload(executionPayloadContext, slot)
-                                    }
-                                }
-                            }
-                        )
+                        createStubExecutionManager(serviceConfig)
+                            .withSkippingSlots { it % 5 == 0L }
+                            .withLogging()
                     }
             }
             .build()
@@ -198,14 +185,11 @@ class SimpleTekuNode {
         File(sequencerNodeEnrFile).writeText(
             beaconNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.enr.orElseThrow()
         )
-
-        Thread.sleep(100000000L)
     }
 
     fun runClientTekuNode(number: Int) {
         val port: Int = 9005 + (number - 1)
         val dataPath: String = "$workDir/data-client-$number"
-        val nodePrivKey = generatePrivateKeyFromSeed(port.toLong())
         val logLevel = Level.DEBUG
 
         setDefaultExceptionHandler()
@@ -213,55 +197,31 @@ class SimpleTekuNode {
         val sequencerEnr = File(sequencerNodeEnrFile).readText()
 
         val config = TekuConfiguration.builder()
+            .applyCommonOptions(port, dataPath)
             .eth2NetworkConfig {
                 it
-                    .applyNetworkDefaults(Eth2Network.MINIMAL)
-                    .customGenesisState(genesisFile)
                     .discoveryBootnodes(sequencerEnr)
-                    .spec(spec)
-            }
-            .network {
-                it
-                    .listenPort(port)
-                    .advertisedIp(Optional.of(advertisedIp))
-                    .networkInterface(advertisedIp)
-                    .setPrivateKeySource { nodePrivKey.bytes().toBytes() }
-            }
-            .discovery {
-                it
-                    .isDiscoveryEnabled(true)
-                    .siteLocalAddressesEnabled(true)
-            }
-            .data {
-                it
-                    .dataBasePath(Path.of(dataPath))
-            }
-            .storageConfiguration {
-                it
-                    .dataStorageMode(stateStorageMode)
             }
             .executionLayer {
                 it
-                    .engineEndpoint("unsafe-test-stub")
                     .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
-//                        LoggingExecutionLayerManager(
-                            ExecutionLayerManagerStub(
-                                spec,
-                                serviceConfig.timeProvider,
-                                true,
-                                Optional.empty(),
-                                BuilderCircuitBreaker.NOOP
-                            )
-//                        )
+                        createStubExecutionManager(serviceConfig)
                     }
             }
             .build()
             .startLogging(logLevel)
 
-        val beaconNode = TekuFacade.startBeaconNode(config)
-
-        Thread.sleep(100000000L)
+        TekuFacade.startBeaconNode(config)
     }
+
+    private fun createStubExecutionManager(serviceConfig: ServiceConfig) =
+        ExecutionLayerManagerStub(
+            spec,
+            serviceConfig.timeProvider,
+            true,
+            Optional.empty(),
+            BuilderCircuitBreaker.NOOP
+        )
 
     fun writeGenesis() {
         val genesisStateBuilder = GenesisStateBuilder()

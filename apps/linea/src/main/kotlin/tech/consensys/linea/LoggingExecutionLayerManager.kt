@@ -22,9 +22,12 @@ import tech.pegasys.teku.spec.executionlayer.PayloadStatus
 import java.util.Optional
 import java.util.function.Function
 
+fun ExecutionLayerManager.withLogging(logger: (String) -> Unit = { println("[LoggingExecutionLayerManager] $it")}) =
+    LoggingExecutionLayerManager(this, logger)
+
 class LoggingExecutionLayerManager(
     val delegate: ExecutionLayerManager,
-    val logger: (String) -> Unit = { println("[LoggingExecutionLayerManager] $it")}
+    val logger: (String) -> Unit
 ) : ExecutionLayerManager {
 
 
