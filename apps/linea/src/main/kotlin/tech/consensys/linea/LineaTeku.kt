@@ -7,12 +7,14 @@ import tech.pegasys.heku.util.ext.toBytes
 import tech.pegasys.heku.util.ext.toUInt64
 import tech.pegasys.heku.util.generatePrivateKeyFromSeed
 import tech.pegasys.heku.util.setDefaultExceptionHandler
+import tech.pegasys.teku.BeaconNodeFacade
 import tech.pegasys.teku.TekuFacade
 import tech.pegasys.teku.bls.BLSKeyPair
 import tech.pegasys.teku.cli.subcommand.internal.validator.tools.EncryptedKeystoreWriter
 import tech.pegasys.teku.config.TekuConfiguration
 import tech.pegasys.teku.ethereum.executionlayer.BuilderCircuitBreaker
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManagerStub
+import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.networking.eth2.gossip.GossipFailureLogger
 import tech.pegasys.teku.service.serviceutils.ServiceConfig
 import tech.pegasys.teku.spec.Spec
@@ -27,53 +29,45 @@ import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Optional
 
-class RunSequencerNode {
+class RunBootNode {
     companion object {
 
         @JvmStatic
         fun main(vararg args: String) {
-            LineaTekuConfig().runSequencerTekuNode(false)
+            val lineaTeku = LineaTeku()
+//            lineaTeku.createGenesisIfRequired()
+            lineaTeku.resetWithNewGenesis()
+            lineaTeku.runBootNode(0, 0 until 32)
         }
     }
 }
 
-class RunClientNode1 {
+class RunNode {
     companion object {
 
         @JvmStatic
         fun main(vararg args: String) {
-            LineaTekuConfig().runClientTekuNode(1)
+            LineaTeku().runNode(1, 32 until 48)
         }
     }
 }
 
-class RunClientNode2 {
+class RunClientNode {
     companion object {
 
         @JvmStatic
         fun main(vararg args: String) {
-            LineaTekuConfig().runClientTekuNode(2)
+            LineaTeku().runNode(2, 48 until 64)
         }
     }
 }
 
-class RunClientNode3 {
-    companion object {
-
-        @JvmStatic
-        fun main(vararg args: String) {
-            LineaTekuConfig().runClientTekuNode(3)
-        }
-    }
-}
-
-
-class LineaTekuConfig {
-    val validatorsCount = 1
-    val genesisTime = System.currentTimeMillis() / 1000
+class LineaTeku (
+    val validatorsCount: Int = 64,
+    val genesisTime: Long = System.currentTimeMillis() / 1000,
     val spec: Spec = TestSpecFactory.createMinimalBellatrix {
         it
-            .secondsPerSlot(2)
+            .secondsPerSlot(1)
             .slotsPerEpoch(1)
             .eth1FollowDistance(1.toUInt64())
             .altairBuilder {
@@ -81,21 +75,20 @@ class LineaTekuConfig {
                     // TODO: can't change NetworkConstants.SYNC_COMMITTEE_SUBNET_COUNT
                     .syncCommitteeSize(4)
             }
-    }
-    val validatorDepositAmount = spec.genesisSpecConfig.maxEffectiveBalance * 100
-    val stateStorageMode = StateStorageMode.PRUNE
+    },
+    val validatorDepositAmount: UInt64 = spec.genesisSpecConfig.maxEffectiveBalance * 100,
+    val stateStorageMode: StateStorageMode = StateStorageMode.PRUNE,
 
-    val workDir = "./work.dir/linea"
+    val workDir: String = "./work.dir/linea",
+    val advertisedIp: String = "10.150.1.122"
+) {
+
     val genesisFile = "$workDir/genesis.ssz"
-    val validatorKeysDir = "$workDir/validator-keys"
     val validatorKeyPass = "1234"
-    val sequencerNodeEnrFile = "$workDir/sequencer-enr.txt"
-
-    //    val advertisedIp = "127.0.0.1"
-    val advertisedIp = "10.150.1.122"
+    val bootnodeEnrFile = "$workDir/bootnode-enr.txt"
 
     val random = SecureRandom(byteArrayOf())
-    val validatorKeys = List(validatorsCount) { BLSKeyPair.random(random) }
+    val validatorKeys: List<BLSKeyPair> = List(validatorsCount) { BLSKeyPair.random(random) }
 
     fun TekuConfiguration.Builder.applyCommonOptions(
         port: Int,
@@ -134,40 +127,79 @@ class LineaTekuConfig {
             }
     }
 
-    fun runSequencerTekuNode(
-        resetGenesisOnSequencerStart: Boolean
-    ) {
-        val port: Int = 9004
-        val dataPath: String = "$workDir/data-seq"
+    fun createGenesisIfRequired() {
+        if (!File(genesisFile).exists()) {
+            resetWithNewGenesis()
+        }
+    }
+
+    fun resetWithNewGenesis() {
+        File(workDir).also {
+            it.deleteRecursively()
+            it.mkdirs()
+        }
+        writeGenesis()
+    }
+
+    fun runBootNode(
+        number: Int,
+        validators: IntRange
+    ): BeaconNodeFacade {
+        val bootNode = runNode(number, validatorKeys.slice(validators), null)
+        File(bootnodeEnrFile).writeText(
+            bootNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.enr.orElseThrow()
+        )
+        return bootNode
+    }
+
+    fun runNode(
+        number: Int,
+        validators: IntRange
+    ): BeaconNodeFacade {
+        val bootnodeEnr = File(bootnodeEnrFile).readText()
+        return runNode(number, validatorKeys.slice(validators), bootnodeEnr)
+    }
+
+    private fun runNode(
+        number: Int,
+        validators: List<BLSKeyPair>,
+        bootnodeEnr: String?
+    ): BeaconNodeFacade {
+        val port = 9004 + number
+        val dataPath = "$workDir/node-$number"
+        val validatorKeysPath = "$dataPath/keys"
         val logLevel = Level.DEBUG
 
         setDefaultExceptionHandler()
 
-        if (resetGenesisOnSequencerStart || !File(genesisFile).exists()) {
-            File(workDir).also {
-                it.deleteRecursively()
-                it.mkdirs()
-            }
-
-            writeGenesis()
-            writeValidatorKeys()
-        }
+        writeValidatorKeys(validators, validatorKeysPath)
 
         val config = TekuConfiguration.builder()
             .applyCommonOptions(port, dataPath)
-            .validator {
-                it
-                    .validatorKeys(listOf("$validatorKeysDir;$validatorKeysDir"))
-                    .validatorKeystoreLockingEnabled(false)
-                    .proposerDefaultFeeRecipient("0x7777777777777777777777777777777777777777")
-            }
             .executionLayer {
                 it
                     .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
                         createStubExecutionManager(serviceConfig)
-                            .withSkippingSlots { it % 5 == 0L }
-                            .withLogging()
+//                            .withSkippingSlots { it % 5 == 0L }
+//                            .withLogging()
                     }
+            }
+            .apply {
+                if (validators.isNotEmpty()) {
+                    validator {
+                        it
+                            .validatorKeys(listOf("$validatorKeysPath;$validatorKeysPath"))
+                            .validatorKeystoreLockingEnabled(false)
+                            .proposerDefaultFeeRecipient("0x7777777777777777777777777777777777777777")
+                    }
+                }
+
+                if (bootnodeEnr != null) {
+                    eth2NetworkConfig {
+                        it
+                            .discoveryBootnodes(bootnodeEnr)
+                    }
+                }
             }
             .build()
             .startLogging(logLevel) {
@@ -180,38 +212,7 @@ class LineaTekuConfig {
                 )
             }
 
-        val beaconNode = TekuFacade.startBeaconNode(config)
-
-        File(sequencerNodeEnrFile).writeText(
-            beaconNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.enr.orElseThrow()
-        )
-    }
-
-    fun runClientTekuNode(number: Int) {
-        val port: Int = 9005 + (number - 1)
-        val dataPath: String = "$workDir/data-client-$number"
-        val logLevel = Level.DEBUG
-
-        setDefaultExceptionHandler()
-
-        val sequencerEnr = File(sequencerNodeEnrFile).readText()
-
-        val config = TekuConfiguration.builder()
-            .applyCommonOptions(port, dataPath)
-            .eth2NetworkConfig {
-                it
-                    .discoveryBootnodes(sequencerEnr)
-            }
-            .executionLayer {
-                it
-                    .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
-                        createStubExecutionManager(serviceConfig)
-                    }
-            }
-            .build()
-            .startLogging(logLevel)
-
-        TekuFacade.startBeaconNode(config)
+        return TekuFacade.startBeaconNode(config)
     }
 
     private fun createStubExecutionManager(serviceConfig: ServiceConfig) =
@@ -235,15 +236,20 @@ class LineaTekuConfig {
         File(genesisFile).writeBytes(genesisState.sszSerialize().toArrayUnsafe())
     }
 
-    fun writeValidatorKeys() {
+    fun writeValidatorKeys(validators: List<BLSKeyPair>, validatorKeysPath: String) {
+        File(validatorKeysPath).also {
+            it.deleteRecursively()
+            it.mkdirs()
+        }
+
         val keystoreWriter =
-            EncryptedKeystoreWriter(random, validatorKeyPass, "qqq", Path.of(validatorKeysDir)) {
+            EncryptedKeystoreWriter(random, validatorKeyPass, "qqq", Path.of(validatorKeysPath)) {
                 println("[EncryptedKeystoreWriter] $it")
             }
-        validatorKeys.forEach { keyPair ->
+        validators.forEach { keyPair ->
             keystoreWriter.writeValidatorKey(keyPair)
             val validatorPasswordFileName: String = keyPair.getPublicKey().toAbbreviatedString() + "_validator.txt"
-            val validatorPasswordFile = Files.createFile(Path.of(validatorKeysDir).resolve(validatorPasswordFileName))
+            val validatorPasswordFile = Files.createFile(Path.of(validatorKeysPath).resolve(validatorPasswordFileName))
             Files.write(validatorPasswordFile, validatorKeyPass.toByteArray(Charset.defaultCharset()))
         }
 
