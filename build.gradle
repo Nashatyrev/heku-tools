@@ -42,6 +42,8 @@ allprojects {
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive'
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8'
 
+        api 'org.jetbrains.kotlinx:kotlinx-datetime-jvm'
+
         testImplementation 'org.junit.jupiter:junit-jupiter-api'
         testImplementation 'org.assertj:assertj-core'
 

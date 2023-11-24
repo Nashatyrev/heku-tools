@@ -1,5 +1,6 @@
 package tech.pegasys.heku.node
 
+import io.libp2p.core.dsl.DebugBuilder
 import io.netty.channel.ChannelHandler
 import org.apache.logging.log4j.Level
 import tech.pegasys.heku.util.beacon.HekuBeaconChainController
@@ -16,9 +17,7 @@ class HekuNodeBuilder {
 
     val tekuConfigBuilder = TekuConfiguration.builder()
 
-    val libp2pNetworkBeforeSecureHandlers = mutableListOf<ChannelHandler>()
-    val libp2pNetworkAfterSecureHandlers = mutableListOf<ChannelHandler>()
-    val libp2pNetworkMuxHandlers = mutableListOf<ChannelHandler>()
+    val libp2pNetworkHandlersBuilder = DebugBuilder()
 
     var loggingConfig = LoggingConfigExt.createDefault()
 
@@ -33,15 +32,7 @@ class HekuNodeBuilder {
 
             val libP2PNetworkBuilder = HekuLibP2PNetworkBuilder().apply {
                 hostBuilderPostModifier = { hostBuilder ->
-                    libp2pNetworkBeforeSecureHandlers.forEach {
-                        hostBuilder.debug.beforeSecureHandler.addNettyHandler(it)
-                    }
-                    libp2pNetworkAfterSecureHandlers.forEach {
-                        hostBuilder.debug.afterSecureHandler.addNettyHandler(it)
-                    }
-                    libp2pNetworkMuxHandlers.forEach {
-                        hostBuilder.debug.muxFramesHandler.addNettyHandler(it)
-                    }
+                    hostBuilder.debug.addAll(libp2pNetworkHandlersBuilder)
                 }
             }
 
@@ -64,5 +55,16 @@ class HekuNodeBuilder {
 
         val nodeFacade = TekuFacade.startBeaconNode(config)
         return HekuNode(nodeFacade)
+    }
+
+    companion object {
+
+        private fun DebugBuilder.addAll(other: DebugBuilder) {
+            this.beforeSecureHandler.handlers += other.beforeSecureHandler.handlers
+            this.afterSecureHandler.handlers += other.afterSecureHandler.handlers
+            this.muxFramesHandler.handlers += other.muxFramesHandler.handlers
+            this.streamPreHandler.handlers += other.streamPreHandler.handlers
+            this.streamHandler.handlers += other.streamHandler.handlers
+        }
     }
 }
