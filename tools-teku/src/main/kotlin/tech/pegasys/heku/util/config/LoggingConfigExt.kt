@@ -8,9 +8,11 @@ import org.apache.logging.log4j.core.Filter
 import org.ethereum.beacon.discovery.pipeline.handler.BadPacketHandler
 import org.ethereum.beacon.discovery.schema.NodeSession
 import org.ethereum.beacon.discovery.task.RecursiveLookupTask
+import tech.pegasys.heku.util.config.LoggingConfigExt.Companion.setDataPathFromTekuConfig
 import tech.pegasys.heku.util.config.logging.RawFilter
 import tech.pegasys.teku.bls.BLS
 import tech.pegasys.teku.config.TekuConfiguration
+import tech.pegasys.teku.infrastructure.io.SystemSignalListener
 import tech.pegasys.teku.infrastructure.logging.LoggingConfig
 import tech.pegasys.teku.networking.eth2.peers.Eth2PeerManager
 import tech.pegasys.teku.networking.eth2.rpc.core.Eth2IncomingRequestHandler
@@ -59,38 +61,15 @@ val NOISY_LOG_FILTERS =
         ),
     ) + NOISY_LOG_FILTERS_BY_CLASS.map { (klass, filter) -> klass.qualifiedName!! to filter }
 
-fun TekuConfiguration.startLogging(
-    level: Level = Level.DEBUG,
-    colored: Boolean = false,
-    loggingModifier: LoggingConfigExt.() -> Unit = { }
-): TekuConfiguration =
-    this.startLogging {
-        logConfigBuilder.logLevel(level)
-        logConfigBuilder.colorEnabled(colored)
-        loggingModifier(this)
-    }
-
-fun TekuConfiguration.startLogging(loggingModifier: LoggingConfigExt.() -> Unit): TekuConfiguration {
-    val loggingConfigBuilder = createLoggingConfigBuilder(this)
-    loggingModifier(loggingConfigBuilder)
-    loggingConfigBuilder.addCustomLevel(NOISY_DEBUG_GENERAL_LOGGERS + NOISY_DEBUG_FORKCHOICE_LOGGERS, Level.INFO)
-    NOISY_LOG_FILTERS.forEach { (logger, filter) ->
-        loggingConfigBuilder.addFilter(logger, filter)
-    }
-    startLogging(loggingConfigBuilder)
-    return this
+fun TekuConfiguration.startLogging(level: Level = Level.DEBUG) = apply {
+    val loggingConfigBuilder = LoggingConfigExt.createDefault()
+    loggingConfigBuilder.logConfigBuilder.logLevel(level)
 }
 
 fun TekuConfiguration.startLogging(config: LoggingConfigExt): TekuConfiguration {
+    config.setDataPathFromTekuConfig(this)
     HekuLoggingConfigurator().startLogging(config)
     return this
-}
-
-fun createLoggingConfigBuilder(config: TekuConfiguration): LoggingConfigExt {
-    return LoggingConfigExt().also {
-        it.logConfigBuilder.dataDirectory(config.dataConfig().dataBasePath.absolutePathString())
-
-    }
 }
 
 class LoggingConfigExt {
@@ -99,7 +78,11 @@ class LoggingConfigExt {
 
     val filters = mutableListOf<Pair<String, Filter>>()
     val loggerLevels = mutableListOf<Pair<String, Level>>()
+
+    // for those logs which are normally goes to the log file
     var consoleLevel = Level.WARN
+    // for those logs which are normally goes to console
+    var consoleStatusLevel = Level.INFO
 
     fun addFilter(logger: String, filter: Filter) {
         filters += logger to filter
@@ -111,5 +94,26 @@ class LoggingConfigExt {
 
     fun addCustomLevel(loggers: List<String>, level: Level) {
         loggers.forEach { addCustomLevel(it, level) }
+    }
+
+    companion object {
+
+        fun LoggingConfigExt.setDataPathFromTekuConfig(config: TekuConfiguration) {
+            logConfigBuilder.dataDirectory(config.dataConfig().dataBasePath.absolutePathString())
+        }
+
+        fun LoggingConfigExt.filterNoisy() {
+            addCustomLevel(NOISY_DEBUG_GENERAL_LOGGERS + NOISY_DEBUG_FORKCHOICE_LOGGERS, Level.INFO)
+            NOISY_LOG_FILTERS.forEach { (logger, filter) ->
+                addFilter(logger, filter)
+            }
+            addCustomLevel(SystemSignalListener::class.qualifiedName!!, Level.ERROR)
+        }
+
+        fun createDefault() = LoggingConfigExt().also {
+            it.logConfigBuilder.logLevel(Level.DEBUG)
+            it.logConfigBuilder.colorEnabled(false)
+            it.filterNoisy()
+        }
     }
 }
