@@ -1,10 +1,12 @@
 package tech.consensys.linea
 
+import io.libp2p.core.ChannelVisitor
 import io.libp2p.etc.util.netty.LoggingHandlerShort
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.logging.LogLevel
 import org.apache.logging.log4j.Level
+import tech.consensys.linea.util.libp2p.ConnectionsTracker
 import tech.consensys.linea.util.netty.SimpleLatencySimHandler
 import tech.pegasys.heku.node.HekuNodeBuilder
 import tech.pegasys.heku.util.config.logging.RawFilter
@@ -34,6 +36,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Optional
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.milliseconds
 
 class RunBootNode {
@@ -87,7 +91,8 @@ class LineaTeku(
     val stateStorageMode: StateStorageMode = StateStorageMode.PRUNE,
 
     val workDir: String = "./work.dir/linea",
-    val advertisedIp: String = "10.150.1.122"
+    val advertisedIp: String = "10.150.1.122",
+    val connectionLatency: Duration = 10.milliseconds
 ) {
 
     val genesisFile = "$workDir/genesis.ssz"
@@ -119,6 +124,9 @@ class LineaTeku(
         File(bootnodeEnrFile).writeText(
             bootNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.enr.orElseThrow()
         )
+
+        println("BootNode Id: " + bootNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.nodeId)
+
         return bootNode
     }
 
@@ -130,10 +138,12 @@ class LineaTeku(
         return runNode(number, validatorKeys.slice(validators), bootnodeEnr)
     }
 
-    private fun runNode(
+    fun runNode(
         number: Int,
         validators: List<BLSKeyPair>,
-        bootnodeEnr: String?
+        bootnodeEnr: String?,
+        consoleOn: Boolean = true,
+        connectionsTracker: ConnectionsTracker? = null
     ): BeaconNodeFacade {
         val port = 9004 + number
         val dataPath = "$workDir/node-$number"
@@ -149,6 +159,9 @@ class LineaTeku(
                         .applyNetworkDefaults(Eth2Network.MINIMAL)
                         .customGenesisState(genesisFile)
                         .spec(spec)
+                    if (bootnodeEnr != null) {
+                        it.discoveryBootnodes(bootnodeEnr)
+                    }
                 }
                 .discovery {
                     it
@@ -172,9 +185,6 @@ class LineaTeku(
                 .executionLayer {
                     it
                         .engineEndpoint("unsafe-test-stub")
-                }
-                .executionLayer {
-                    it
                         .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
                             createStubExecutionManager(serviceConfig)
 //                            .withSkippingSlots { it % 5 == 0L }
@@ -190,19 +200,20 @@ class LineaTeku(
                             .proposerDefaultFeeRecipient("0x7777777777777777777777777777777777777777")
                     }
             }
-            if (bootnodeEnr != null) {
-                tekuConfigBuilder
-                    .eth2NetworkConfig {
-                        it
-                            .discoveryBootnodes(bootnodeEnr)
-                    }
+
+            if (connectionLatency > ZERO) {
+                libp2pNetworkHandlersBuilder.afterSecureHandler.addNettyHandler(
+                    SimpleLatencySimHandler(connectionLatency)
+                )
             }
 
-            this.libp2pNetworkAfterSecureHandlers += SimpleLatencySimHandler(300.milliseconds)
+            if (connectionsTracker != null) {
+                libp2pNetworkHandlersBuilder.afterSecureHandler.addHandler(connectionsTracker)
+            }
 
-                with(loggingConfig) {
-                logConfigBuilder.logLevel(Level.DEBUG)
-                consoleStatusLevel = Level.INFO
+            with(loggingConfig) {
+                logConfigBuilder.logLevel(Level.INFO)
+                consoleStatusLevel = if (consoleOn) Level.INFO else Level.OFF
                 addFilter(
                     // Filter entries: WARN  - Failed to publish sync committee message(s) for slot 3 because no peers were available on the required gossip topic
                     // Filter entries: WARN  - Failed to publish attestation(s) for slot 3 because no peers were available on the required gossip topic
