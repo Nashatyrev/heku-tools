@@ -28,6 +28,7 @@ import org.apache.logging.log4j.core.appender.rolling.TimeBasedTriggeringPolicy;
 import org.apache.logging.log4j.core.config.AbstractConfiguration;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.filter.LevelRangeFilter;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.pattern.RegexReplacement;
 import org.apache.logging.log4j.status.StatusLogger;
@@ -61,6 +62,7 @@ public class HekuLoggingConfigurator {
 
   private static LoggingDestination destination;
   private static boolean includeEvents;
+  private static boolean includeStatus;
   private static boolean includeValidatorDuties;
   private static boolean includeP2pWarnings;
   private static String file;
@@ -121,15 +123,10 @@ public class HekuLoggingConfigurator {
 
     final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
     AbstractConfiguration ctxConfiguration = (AbstractConfiguration) ctx.getConfiguration();
-    addLoggers(ctxConfiguration, configEx.getConsoleLevel());
+    addLoggers(ctxConfiguration, configEx.getConsoleLevel(), configEx.getConsoleStatusLevel());
     setCustomLevels(ctxConfiguration, configEx);
     addFilters(ctxConfiguration, configEx);
     ctx.updateLoggers();
-  }
-
-  public static synchronized void addLoggersProgrammatically(
-      final AbstractConfiguration configuration) {
-    addLoggers(configuration, Level.OFF);
   }
 
   private static void setCustomLevels(final AbstractConfiguration configuration, LoggingConfigExt configEx) {
@@ -160,7 +157,7 @@ public class HekuLoggingConfigurator {
     }
   }
 
-  private static void addLoggers(final AbstractConfiguration configuration, Level consoleLevel) {
+  private static void addLoggers(final AbstractConfiguration configuration, Level consoleLevel, Level consoleStatusLevel) {
 
     if (isUninitialized()) {
       return;
@@ -183,7 +180,7 @@ public class HekuLoggingConfigurator {
 
     switch (destination) {
       case CONSOLE:
-        consoleAppender = consoleAppender(configuration, false);
+        consoleAppender = consoleAppender(configuration, false, consoleStatusLevel);
 
         setUpStatusLogger(consoleAppender);
         setUpEventsLogger(consoleAppender);
@@ -206,7 +203,7 @@ public class HekuLoggingConfigurator {
       case DEFAULT_BOTH:
         // fall through
       case BOTH:
-        consoleAppender = consoleAppender(configuration, true);
+        consoleAppender = consoleAppender(configuration, true, consoleStatusLevel);
         final LoggerConfig eventsLogger = setUpEventsLogger(consoleAppender);
         final LoggerConfig statusLogger = setUpStatusLogger(consoleAppender);
         final LoggerConfig validatorLogger = setUpValidatorLogger(consoleAppender);
@@ -346,13 +343,17 @@ public class HekuLoggingConfigurator {
   }
 
   private static Appender consoleAppender(
-      final AbstractConfiguration configuration, final boolean omitStackTraces) {
+          final AbstractConfiguration configuration, final boolean omitStackTraces, Level consoleStatusLevel) {
     configuration.removeAppender(CONSOLE_APPENDER_NAME);
 
     final Layout<?> layout = consoleAppenderLayout(configuration, omitStackTraces);
 
     final Appender consoleAppender =
-        ConsoleAppender.newBuilder().setName(CONSOLE_APPENDER_NAME).setLayout(layout).build();
+        ConsoleAppender.newBuilder()
+                .setName(CONSOLE_APPENDER_NAME)
+                .setLayout(layout)
+                .setFilter(LevelRangeFilter.createFilter(Level.OFF, consoleStatusLevel, null ,null))
+                .build();
     consoleAppender.start();
 
     return consoleAppender;
