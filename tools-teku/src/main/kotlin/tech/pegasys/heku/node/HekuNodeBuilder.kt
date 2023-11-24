@@ -16,8 +16,8 @@ class HekuNodeBuilder {
 
     val tekuConfigBuilder = TekuConfiguration.builder()
 
-    val libp2pNetworkAfterSecureHandlers = mutableListOf<ChannelHandler>()
     val libp2pNetworkBeforeSecureHandlers = mutableListOf<ChannelHandler>()
+    val libp2pNetworkAfterSecureHandlers = mutableListOf<ChannelHandler>()
     val libp2pNetworkMuxHandlers = mutableListOf<ChannelHandler>()
 
     var loggingConfig = LoggingConfigExt.createDefault()
@@ -31,7 +31,20 @@ class HekuNodeBuilder {
 
         val bcControllerFactory = BeaconChainControllerFactory { serviceConfig, beaconChainConfig ->
 
-            val libP2PNetworkBuilder = HekuLibP2PNetworkBuilder()
+            val libP2PNetworkBuilder = HekuLibP2PNetworkBuilder().apply {
+                hostBuilderPostModifier = { hostBuilder ->
+                    libp2pNetworkBeforeSecureHandlers.forEach {
+                        hostBuilder.debug.beforeSecureHandler.addNettyHandler(it)
+                    }
+                    libp2pNetworkAfterSecureHandlers.forEach {
+                        hostBuilder.debug.afterSecureHandler.addNettyHandler(it)
+                    }
+                    libp2pNetworkMuxHandlers.forEach {
+                        hostBuilder.debug.muxFramesHandler.addNettyHandler(it)
+                    }
+                }
+            }
+
             val discoveryNetworkBuilder = HekuDiscoveryNetworkBuilder()
 
             HekuBeaconChainController(
