@@ -1,6 +1,7 @@
 package tech.consensys.linea
 
 import org.apache.logging.log4j.Level
+import tech.pegasys.heku.node.HekuNodeBuilder
 import tech.pegasys.heku.util.config.logging.RawFilter
 import tech.pegasys.heku.util.config.startLogging
 import tech.pegasys.heku.util.ext.toBytes
@@ -62,7 +63,7 @@ class RunClientNode {
     }
 }
 
-class LineaTeku (
+class LineaTeku(
     val validatorsCount: Int = 64,
     val genesisTime: Long = System.currentTimeMillis() / 1000,
     val spec: Spec = TestSpecFactory.createMinimalBellatrix {
@@ -89,43 +90,6 @@ class LineaTeku (
 
     val random = SecureRandom(byteArrayOf())
     val validatorKeys: List<BLSKeyPair> = List(validatorsCount) { BLSKeyPair.random(random) }
-
-    fun TekuConfiguration.Builder.applyCommonOptions(
-        port: Int,
-        dataPath: String
-    ): TekuConfiguration.Builder = apply {
-        val nodePrivKey = generatePrivateKeyFromSeed(port.toLong())
-        this
-            .eth2NetworkConfig {
-                it
-                    .applyNetworkDefaults(Eth2Network.MINIMAL)
-                    .customGenesisState(genesisFile)
-                    .spec(spec)
-            }
-            .discovery {
-                it
-                    .isDiscoveryEnabled(true)
-                    .siteLocalAddressesEnabled(true)
-            }
-            .network {
-                it
-                    .listenPort(port)
-                    .advertisedIp(Optional.of(advertisedIp))
-                    .setPrivateKeySource { nodePrivKey.bytes().toBytes() }
-            }
-            .data {
-                it
-                    .dataBasePath(Path.of(dataPath))
-            }
-            .storageConfiguration {
-                it
-                    .dataStorageMode(stateStorageMode)
-            }
-            .executionLayer {
-                it
-                    .engineEndpoint("unsafe-test-stub")
-            }
-    }
 
     fun createGenesisIfRequired() {
         if (!File(genesisFile).exists()) {
@@ -168,42 +132,69 @@ class LineaTeku (
         val port = 9004 + number
         val dataPath = "$workDir/node-$number"
         val validatorKeysPath = "$dataPath/keys"
-        val logLevel = Level.DEBUG
-
-        setDefaultExceptionHandler()
+        val nodePrivKey = generatePrivateKeyFromSeed(port.toLong())
 
         writeValidatorKeys(validators, validatorKeysPath)
 
-        val config = TekuConfiguration.builder()
-            .applyCommonOptions(port, dataPath)
-            .executionLayer {
-                it
-                    .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
-                        createStubExecutionManager(serviceConfig)
+        return HekuNodeBuilder().apply {
+            tekuConfigBuilder
+                .eth2NetworkConfig {
+                    it
+                        .applyNetworkDefaults(Eth2Network.MINIMAL)
+                        .customGenesisState(genesisFile)
+                        .spec(spec)
+                }
+                .discovery {
+                    it
+                        .isDiscoveryEnabled(true)
+                        .siteLocalAddressesEnabled(true)
+                }
+                .network {
+                    it
+                        .listenPort(port)
+                        .advertisedIp(Optional.of(advertisedIp))
+                        .setPrivateKeySource { nodePrivKey.bytes().toBytes() }
+                }
+                .data {
+                    it
+                        .dataBasePath(Path.of(dataPath))
+                }
+                .storageConfiguration {
+                    it
+                        .dataStorageMode(stateStorageMode)
+                }
+                .executionLayer {
+                    it
+                        .engineEndpoint("unsafe-test-stub")
+                }
+                .executionLayer {
+                    it
+                        .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
+                            createStubExecutionManager(serviceConfig)
 //                            .withSkippingSlots { it % 5 == 0L }
 //                            .withLogging()
-                    }
-            }
-            .apply {
-                if (validators.isNotEmpty()) {
-                    validator {
+                        }
+                }
+            if (validators.isNotEmpty()) {
+                tekuConfigBuilder
+                    .validator {
                         it
                             .validatorKeys(listOf("$validatorKeysPath;$validatorKeysPath"))
                             .validatorKeystoreLockingEnabled(false)
                             .proposerDefaultFeeRecipient("0x7777777777777777777777777777777777777777")
                     }
-                }
-
-                if (bootnodeEnr != null) {
-                    eth2NetworkConfig {
+            }
+            if (bootnodeEnr != null) {
+                tekuConfigBuilder
+                    .eth2NetworkConfig {
                         it
                             .discoveryBootnodes(bootnodeEnr)
                     }
-                }
             }
-            .build()
-            .startLogging(logLevel) {
-                // Filter the following WARN messages cause just a single validator node
+
+            with(loggingConfig) {
+                logConfigBuilder.logLevel(Level.DEBUG)
+                consoleStatusLevel = Level.INFO
                 addFilter(
                     // Filter entries: WARN  - Failed to publish sync committee message(s) for slot 3 because no peers were available on the required gossip topic
                     // Filter entries: WARN  - Failed to publish attestation(s) for slot 3 because no peers were available on the required gossip topic
@@ -211,8 +202,7 @@ class LineaTeku (
                     RawFilter.excludeByMessage("because no peers were available on the required gossip topic")
                 )
             }
-
-        return TekuFacade.startBeaconNode(config)
+        }.buildAndStart().beaconNode
     }
 
     private fun createStubExecutionManager(serviceConfig: ServiceConfig) =
