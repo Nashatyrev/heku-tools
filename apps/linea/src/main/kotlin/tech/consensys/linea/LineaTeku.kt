@@ -1,6 +1,11 @@
 package tech.consensys.linea
 
+import io.libp2p.etc.util.netty.LoggingHandlerShort
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.handler.logging.LogLevel
 import org.apache.logging.log4j.Level
+import tech.consensys.linea.util.netty.SimpleLatencySimHandler
 import tech.pegasys.heku.node.HekuNodeBuilder
 import tech.pegasys.heku.util.config.logging.RawFilter
 import tech.pegasys.heku.util.config.startLogging
@@ -29,6 +34,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Optional
+import kotlin.time.Duration.Companion.milliseconds
 
 class RunBootNode {
     companion object {
@@ -48,7 +54,7 @@ class RunNode {
 
         @JvmStatic
         fun main(vararg args: String) {
-            LineaTeku().runNode(1, 32 until 48)
+            LineaTeku().runNode(1, 32 until 64)
         }
     }
 }
@@ -192,7 +198,9 @@ class LineaTeku(
                     }
             }
 
-            with(loggingConfig) {
+            this.libp2pNetworkAfterSecureHandlers += SimpleLatencySimHandler(300.milliseconds)
+
+                with(loggingConfig) {
                 logConfigBuilder.logLevel(Level.DEBUG)
                 consoleStatusLevel = Level.INFO
                 addFilter(
