@@ -2,6 +2,7 @@ package tech.pegasys.heku.node
 
 import io.libp2p.core.dsl.DebugBuilder
 import io.netty.channel.ChannelHandler
+import kotlinx.coroutines.handleCoroutineException
 import org.apache.logging.log4j.Level
 import tech.pegasys.heku.util.beacon.HekuBeaconChainController
 import tech.pegasys.heku.util.beacon.HekuDiscoveryNetworkBuilder
@@ -9,8 +10,13 @@ import tech.pegasys.heku.util.config.LoggingConfigExt
 import tech.pegasys.heku.util.config.startLogging
 import tech.pegasys.heku.util.net.libp2p.HekuLibP2PNetworkBuilder
 import tech.pegasys.heku.util.setDefaultExceptionHandler
+import tech.pegasys.teku.BeaconNode
+import tech.pegasys.teku.NodeServiceConfigBuilder
 import tech.pegasys.teku.TekuFacade
 import tech.pegasys.teku.config.TekuConfiguration
+import tech.pegasys.teku.infrastructure.async.ExecutorServiceFactory
+import tech.pegasys.teku.infrastructure.events.EventChannels
+import tech.pegasys.teku.service.serviceutils.ServiceConfig
 import tech.pegasys.teku.services.beaconchain.BeaconChainControllerFactory
 
 class HekuNodeBuilder {
@@ -22,6 +28,8 @@ class HekuNodeBuilder {
     var loggingConfig = LoggingConfigExt.createDefault()
 
     private var setDefaultExceptionHandler = true
+
+    var executionServiceFactory: ExecutorServiceFactory? = null
 
     fun buildAndStart(): HekuNode {
         if (setDefaultExceptionHandler) {
@@ -53,8 +61,20 @@ class HekuNodeBuilder {
             .build()
             .startLogging(loggingConfig)
 
-        val nodeFacade = TekuFacade.startBeaconNode(config)
-        return HekuNode(nodeFacade)
+
+        val serviceConfig = object : NodeServiceConfigBuilder(config) {
+
+            override fun createExecutorFactory(): ExecutorServiceFactory =
+                executionServiceFactory ?: super.createExecutorFactory()
+
+            override fun createEventChannels(): EventChannels =
+                EventChannels.createSyncChannels(subscriberExceptionHandler, metricsEndpoint.metricsSystem)
+
+        }.build()
+
+        val beaconNode = BeaconNode(config, serviceConfig)
+        beaconNode.start()
+        return HekuNode(beaconNode)
     }
 
     companion object {

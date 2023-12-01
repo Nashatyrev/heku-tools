@@ -366,6 +366,7 @@ public class HekuLoggingConfigurator {
     return PatternLayout.newBuilder()
         .withRegexReplacement(RegexReplacement.createRegexReplacement(logReplacement, ""))
         .withPatternSelector(new FilePatternSelector(configuration))
+        .withAlwaysWriteExceptions(false)
 //        .withPattern(FILE_MESSAGE_FORMAT)
         .withConfiguration(configuration)
         .build();
@@ -379,6 +380,7 @@ public class HekuLoggingConfigurator {
         RollingFileAppender.newBuilder()
             .setName(FILE_APPENDER_NAME)
             .withAppend(true)
+            .setImmediateFlush(false)
             .setLayout(layout)
             .withFileName(file)
             .withFilePattern(filePattern)
