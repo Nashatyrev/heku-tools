@@ -38,7 +38,8 @@ class ConnectionsTracker(
     val activeConnections: List<ConnectionRecord>
         @Synchronized
         get() = allConnections.filter { it.duration.isInfinite() }
-    val activeConnectionsById = activeConnections.associateBy { it.id }
+    val activeConnectionsById: Map<ConnectionId, ConnectionRecord>
+        get() = activeConnections.associateBy { it.id }
 
     @Synchronized
     private fun connected(conn: Connection) {
