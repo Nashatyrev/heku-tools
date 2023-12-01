@@ -1,4 +1,4 @@
-package tech.consensys.linea
+package tech.consensys.linea.execution
 
 import org.apache.tuweni.bytes.Bytes32
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManager

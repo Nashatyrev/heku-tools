@@ -1,4 +1,4 @@
-package tech.consensys.linea
+package tech.consensys.linea.execution
 
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManager
 import tech.pegasys.teku.infrastructure.async.SafeFuture

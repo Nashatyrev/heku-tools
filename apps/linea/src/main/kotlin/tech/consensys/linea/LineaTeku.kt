@@ -1,11 +1,17 @@
 package tech.consensys.linea
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.libp2p.core.ChannelVisitor
 import io.libp2p.etc.util.netty.LoggingHandlerShort
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.logging.LogLevel
+import kotlinx.datetime.Clock
+import kotlinx.datetime.toJavaInstant
 import org.apache.logging.log4j.Level
+import tech.consensys.linea.execution.withDelay
+import tech.consensys.linea.execution.withLogging
+import tech.consensys.linea.util.async.MinimizedExecutorFactory
 import tech.consensys.linea.util.libp2p.ConnectionsTracker
 import tech.consensys.linea.util.netty.SimpleLatencySimHandler
 import tech.pegasys.heku.node.HekuNodeBuilder
@@ -22,6 +28,7 @@ import tech.pegasys.teku.cli.subcommand.internal.validator.tools.EncryptedKeysto
 import tech.pegasys.teku.config.TekuConfiguration
 import tech.pegasys.teku.ethereum.executionlayer.BuilderCircuitBreaker
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManagerStub
+import tech.pegasys.teku.infrastructure.async.ExecutorServiceFactory
 import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.networking.eth2.gossip.GossipFailureLogger
 import tech.pegasys.teku.service.serviceutils.ServiceConfig
@@ -35,7 +42,13 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
+import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Optional
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,7 +61,7 @@ class RunBootNode {
             val lineaTeku = LineaTeku()
 //            lineaTeku.createGenesisIfRequired()
             lineaTeku.resetWithNewGenesis()
-            lineaTeku.runBootNode(0, 0 until 32)
+            lineaTeku.runBootNode(0, 0 until 64)
         }
     }
 }
@@ -92,7 +105,8 @@ class LineaTeku(
 
     val workDir: String = "./work.dir/linea",
     val advertisedIp: String = "10.150.1.122",
-    val connectionLatency: Duration = 10.milliseconds
+    val connectionLatency: Duration = 1.milliseconds,
+    val executionDelay: Duration = 1.milliseconds,
 ) {
 
     val genesisFile = "$workDir/genesis.ssz"
@@ -151,6 +165,8 @@ class LineaTeku(
         val nodePrivKey = generatePrivateKeyFromSeed(port.toLong())
 
         writeValidatorKeys(validators, validatorKeysPath)
+        val executorFactory = MinimizedExecutorFactory("$number", 4)
+        val delayExecutor = executorFactory.createScheduledExecutor("delayExecutor")
 
         return HekuNodeBuilder().apply {
             tekuConfigBuilder
@@ -165,6 +181,8 @@ class LineaTeku(
                 }
                 .discovery {
                     it
+//                        .maxPeers(8)
+//                        .minPeers(6)
                         .isDiscoveryEnabled(true)
                         .siteLocalAddressesEnabled(true)
                 }
@@ -183,12 +201,13 @@ class LineaTeku(
                         .dataStorageMode(stateStorageMode)
                 }
                 .executionLayer {
+                    val timeFormatter = SimpleDateFormat("HH:mm:ss.SSS")
                     it
                         .engineEndpoint("unsafe-test-stub")
                         .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
                             createStubExecutionManager(serviceConfig)
-//                            .withSkippingSlots { it % 5 == 0L }
-//                            .withLogging()
+                                .withDelay(executionDelay, executionDelay, delayExecutor)
+//                                .withLogging { println("${timeFormatter.format(Date())} EXEC $it") }
                         }
                 }
             if (validators.isNotEmpty()) {
@@ -221,6 +240,9 @@ class LineaTeku(
                     RawFilter.excludeByMessage("because no peers were available on the required gossip topic")
                 )
             }
+
+            executionServiceFactory = executorFactory
+
         }.buildAndStart().beaconNode
     }
 
