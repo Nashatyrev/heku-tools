@@ -75,6 +75,7 @@ fun TekuConfiguration.startLogging(config: LoggingConfigExt): TekuConfiguration 
 class LoggingConfigExt {
 
     val logConfigBuilder: LoggingConfig.LoggingConfigBuilder = LoggingConfig.builder()
+    val logConfig by lazy { logConfigBuilder.build() }
 
     val filters = mutableListOf<Pair<String, Filter>>()
     val loggerLevels = mutableListOf<Pair<String, Level>>()
@@ -83,6 +84,7 @@ class LoggingConfigExt {
     var consoleLevel = Level.WARN
     // for those logs which are normally goes to console
     var consoleStatusLevel = Level.INFO
+    var consoleOmitStackTraces = true
 
     fun addFilter(logger: String, filter: Filter) {
         filters += logger to filter

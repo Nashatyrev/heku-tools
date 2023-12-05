@@ -9,6 +9,7 @@ import io.netty.handler.logging.LogLevel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import org.apache.logging.log4j.Level
+import tech.consensys.linea.execution.toDelayer
 import tech.consensys.linea.execution.withDelay
 import tech.consensys.linea.execution.withLogging
 import tech.consensys.linea.util.async.MinimizedExecutorFactory
@@ -61,7 +62,7 @@ class RunBootNode {
             val lineaTeku = LineaTeku()
 //            lineaTeku.createGenesisIfRequired()
             lineaTeku.resetWithNewGenesis()
-            lineaTeku.runBootNode(0, 0 until 64)
+            lineaTeku.runBootNode(0, 0 until 32)
         }
     }
 }
@@ -106,7 +107,7 @@ class LineaTeku(
     val workDir: String = "./work.dir/linea",
     val advertisedIp: String = "10.150.1.122",
     val connectionLatency: Duration = 1.milliseconds,
-    val executionDelay: Duration = 1.milliseconds,
+    val executionDelay: Duration = 250.milliseconds,
 ) {
 
     val genesisFile = "$workDir/genesis.ssz"
@@ -124,7 +125,9 @@ class LineaTeku(
 
     fun resetWithNewGenesis() {
         File(workDir).also {
-            it.deleteRecursively()
+            if (!it.deleteRecursively()) {
+                throw RuntimeException("Couldn't delete $workDir")
+            }
             it.mkdirs()
         }
         writeGenesis()
@@ -168,7 +171,7 @@ class LineaTeku(
         val executorFactory = MinimizedExecutorFactory("$number", 4)
         val delayExecutor = executorFactory.createScheduledExecutor("delayExecutor")
 
-        return HekuNodeBuilder().apply {
+        val nodeBuilder = HekuNodeBuilder().apply {
             tekuConfigBuilder
                 .eth2NetworkConfig {
                     it
@@ -201,12 +204,13 @@ class LineaTeku(
                         .dataStorageMode(stateStorageMode)
                 }
                 .executionLayer {
-                    val timeFormatter = SimpleDateFormat("HH:mm:ss.SSS")
+//                    val timeFormatter = SimpleDateFormat("HH:mm:ss.SSS")
                     it
                         .engineEndpoint("unsafe-test-stub")
                         .stubExecutionLayerManagerConstructor { serviceConfig, _ ->
+                            val asyncRunner = serviceConfig.asyncRunnerFactory.create("el_delayer", 1)
                             createStubExecutionManager(serviceConfig)
-                                .withDelay(executionDelay, executionDelay, delayExecutor)
+                                .withDelay(executionDelay, executionDelay, asyncRunner.toDelayer())
 //                                .withLogging { println("${timeFormatter.format(Date())} EXEC $it") }
                         }
                 }
@@ -241,9 +245,13 @@ class LineaTeku(
                 )
             }
 
-            executionServiceFactory = executorFactory
+//            executionServiceFactory = executorFactory
 
-        }.buildAndStart().beaconNode
+        }
+
+        val beaconNodes = HekuNodeBuilder.buildAndStartAll(listOf(nodeBuilder))
+
+        return beaconNodes.first().beaconNode
     }
 
     private fun createStubExecutionManager(serviceConfig: ServiceConfig) =

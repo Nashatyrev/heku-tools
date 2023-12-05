@@ -1,7 +1,9 @@
 package tech.consensys.linea
 
 import tech.consensys.linea.util.libp2p.ConnectionsTracker
+import tech.pegasys.heku.util.ext.toUInt64
 import tech.pegasys.teku.bls.BLSKeyPair
+import tech.pegasys.teku.spec.TestSpecFactory
 import kotlin.time.Duration.Companion.milliseconds
 
 fun main() {
@@ -11,9 +13,21 @@ fun main() {
 class LineaTekuNetwork(
     val nodeFactory: LineaTeku = LineaTeku(
         validatorsCount = 64,
-        connectionLatency = 10.milliseconds
+        connectionLatency = 100.milliseconds,
+        executionDelay = 250.milliseconds,
+        spec = TestSpecFactory.createMinimalBellatrix {
+        it
+            .secondsPerSlot(2)
+            .slotsPerEpoch(1)
+            .eth1FollowDistance(1.toUInt64())
+            .altairBuilder {
+                it
+                    // TODO: can't change NetworkConstants.SYNC_COMMITTEE_SUBNET_COUNT
+                    .syncCommitteeSize(4)
+            }
+    },
     ),
-    val nodeCount: Int = 8
+    val nodeCount: Int = 16
 ) {
     val connectionsTracker = ConnectionsTracker()
 
