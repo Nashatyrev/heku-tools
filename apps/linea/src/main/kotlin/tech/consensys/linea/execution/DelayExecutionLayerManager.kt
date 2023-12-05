@@ -4,6 +4,7 @@ import io.libp2p.etc.types.forward
 import org.apache.tuweni.bytes.Bytes32
 import tech.pegasys.heku.util.ext.schedule
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManager
+import tech.pegasys.teku.infrastructure.async.AsyncRunner
 import tech.pegasys.teku.infrastructure.async.SafeFuture
 import tech.pegasys.teku.infrastructure.ssz.SszList
 import tech.pegasys.teku.infrastructure.unsigned.UInt64
@@ -25,18 +26,47 @@ import java.util.Optional
 import java.util.concurrent.ScheduledExecutorService
 import java.util.function.Function
 import kotlin.time.Duration
+import kotlin.time.toJavaDuration
+
+interface Delayer {
+    fun <T> delay(f: SafeFuture<T>, delay: Duration): SafeFuture<T>
+}
+
+fun ScheduledExecutorService.toDelayer(): Delayer = object : Delayer {
+    override fun <T> delay(f: SafeFuture<T>, delay: Duration): SafeFuture<T> {
+        val ret = SafeFuture<T>()
+        f.always {
+            this@toDelayer.schedule(delay) {
+                f.forward(ret)
+            }
+        }
+        return ret
+    }
+}
+
+fun AsyncRunner.toDelayer(): Delayer = object : Delayer {
+    override fun <T> delay(f: SafeFuture<T>, delay: Duration): SafeFuture<T> {
+        val ret = SafeFuture<T>()
+        f.always {
+            this@toDelayer.runAfterDelay({
+                f.forward(ret)
+            }, delay.toJavaDuration())
+        }
+        return ret
+    }
+}
 
 fun ExecutionLayerManager.withDelay(
     delayNewPayload: Duration,
     delayGetPayload: Duration,
-    scheduler: ScheduledExecutorService
-) = DelayExecutionLayerManager(this, delayNewPayload, delayGetPayload, scheduler)
+    delayer: Delayer
+) = DelayExecutionLayerManager(this, delayNewPayload, delayGetPayload, delayer)
 
 class DelayExecutionLayerManager(
     val delegate: ExecutionLayerManager,
     val delayNewPayload: Duration,
     val delayGetPayload: Duration,
-    val scheduler: ScheduledExecutorService
+    val delayer: Delayer
 ) : ExecutionLayerManager {
 
 
@@ -59,24 +89,14 @@ class DelayExecutionLayerManager(
         return delegate.engineForkChoiceUpdated(forkChoiceState, payloadBuildingAttributes)
     }
 
-    override fun engineNewPayload(newPayloadRequest: NewPayloadRequest): SafeFuture<PayloadStatus> {
-        val ret = SafeFuture<PayloadStatus>()
-        scheduler.schedule(delayNewPayload) {
-            delegate.engineNewPayload(newPayloadRequest).forward(ret)
-        }
-        return ret
-    }
+    override fun engineNewPayload(newPayloadRequest: NewPayloadRequest): SafeFuture<PayloadStatus> =
+        delayer.delay(delegate.engineNewPayload(newPayloadRequest), delayNewPayload)
 
     override fun engineGetPayload(
         executionPayloadContext: ExecutionPayloadContext,
         slot: UInt64
-    ): SafeFuture<GetPayloadResponse> {
-        val ret = SafeFuture<GetPayloadResponse>()
-        scheduler.schedule(delayGetPayload) {
-            delegate.engineGetPayload(executionPayloadContext, slot).forward(ret)
-        }
-        return ret
-    }
+    ): SafeFuture<GetPayloadResponse> =
+        delayer.delay(delegate.engineGetPayload(executionPayloadContext, slot), delayGetPayload)
 
     override fun builderRegisterValidators(
         signedValidatorRegistrations: SszList<SignedValidatorRegistration>,
