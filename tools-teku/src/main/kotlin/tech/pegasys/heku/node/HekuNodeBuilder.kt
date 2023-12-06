@@ -1,5 +1,6 @@
 package tech.pegasys.heku.node
 
+import io.libp2p.core.crypto.unmarshalPrivateKey
 import io.libp2p.core.dsl.DebugBuilder
 import io.netty.channel.ChannelHandler
 import kotlinx.coroutines.handleCoroutineException
@@ -11,6 +12,7 @@ import tech.pegasys.heku.util.config.LoggingConfigExt.Companion.setDataPathFromT
 import tech.pegasys.heku.util.config.MultiHekuLoggingConfigurator
 import tech.pegasys.heku.util.config.ThreadContextExecutorFactory
 import tech.pegasys.heku.util.config.startLogging
+import tech.pegasys.heku.util.net.discovery.discv5.system.EnrBuilder
 import tech.pegasys.heku.util.net.libp2p.HekuLibP2PNetworkBuilder
 import tech.pegasys.heku.util.setDefaultExceptionHandler
 import tech.pegasys.teku.BeaconNode
@@ -82,6 +84,17 @@ class HekuNodeBuilder {
         }.build()
 
         return Configs(config, serviceConfig)
+    }
+
+    fun getEnr(): String {
+        val tmpConfig = tekuConfigBuilder.build()
+        val privateKeyBytes = tmpConfig.network().privateKeySource.orElseThrow().privateKeyBytes
+        val privKey = unmarshalPrivateKey(privateKeyBytes.toArrayUnsafe())
+        return EnrBuilder()
+            .privateKey(privKey)
+            .address(tmpConfig.network().advertisedIp, tmpConfig.network().advertisedPort)
+            .build()
+            .asEnr()
     }
 
     fun buildAndStart(): HekuNode {

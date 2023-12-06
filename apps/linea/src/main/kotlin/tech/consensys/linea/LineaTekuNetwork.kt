@@ -1,6 +1,7 @@
 package tech.consensys.linea
 
 import tech.consensys.linea.util.libp2p.ConnectionsTracker
+import tech.pegasys.heku.node.HekuNodeBuilder
 import tech.pegasys.heku.util.ext.toUInt64
 import tech.pegasys.teku.bls.BLSKeyPair
 import tech.pegasys.teku.spec.TestSpecFactory
@@ -13,8 +14,8 @@ fun main() {
 class LineaTekuNetwork(
     val nodeFactory: LineaTeku = LineaTeku(
         validatorsCount = 64,
-        connectionLatency = 100.milliseconds,
-        executionDelay = 250.milliseconds,
+        connectionLatency = 0.milliseconds,
+        executionDelay = 0.milliseconds,
         spec = TestSpecFactory.createMinimalBellatrix {
         it
             .secondsPerSlot(2)
@@ -27,7 +28,7 @@ class LineaTekuNetwork(
             }
     },
     ),
-    val nodeCount: Int = 16
+    val nodeCount: Int = 2
 ) {
     val connectionsTracker = ConnectionsTracker()
 
@@ -35,13 +36,15 @@ class LineaTekuNetwork(
         nodeFactory.resetWithNewGenesis()
 
         val validatorsByNodes = splitValidatorsByNodes()
-        val bootNode = nodeFactory.runNode(0, validatorsByNodes[0], null, true, connectionsTracker)
-        val bootNodeEnr = bootNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.enr.orElseThrow()
+        val bootNode = nodeFactory.createNode(0, validatorsByNodes[0], null, true, connectionsTracker)
+        val bootNodeEnr = bootNode.getEnr()
         val otherNodes = (1 until nodeCount)
             .map { idx ->
-                nodeFactory.runNode(idx, validatorsByNodes[idx], bootNodeEnr, false, connectionsTracker)
+                nodeFactory.createNode(idx, validatorsByNodes[idx], bootNodeEnr, true, connectionsTracker)
             }
-        val allNodes = listOf(bootNode) + otherNodes
+        val allNodeBuilders = listOf(bootNode) + otherNodes
+
+        val allNodes = HekuNodeBuilder.buildAndStartAll(allNodeBuilders)
 
         while (true) {
             Thread.sleep(3000)
