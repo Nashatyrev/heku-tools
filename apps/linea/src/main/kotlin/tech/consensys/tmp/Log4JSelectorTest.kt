@@ -52,6 +52,19 @@ fun main() {
     ctxConfiguration.addAppender(appender2)
     appender2.start()
 
+    val defaultAppender = ConsoleAppender.newBuilder()
+        .setImmediateFlush(true)
+        .setName("AAA3")
+        .setConfiguration(ctxConfiguration)
+        .setLayout(
+            PatternLayout.newBuilder()
+                .withPattern("[?] %d{HH:mm:ss.SSS} | %t | %-5level | %c{1} | %msg%n")
+                .build()
+        )
+        .build()
+    ctxConfiguration.addAppender(defaultAppender)
+    defaultAppender.start()
+
     val routeAppender = RoutingAppender.newBuilder()
         .setConfiguration(ctxConfiguration)
         .withRoutes(
@@ -60,7 +73,8 @@ fun main() {
                 .withRoutes(
                     arrayOf(
                         Route.createRoute("AAA1", "1", null),
-                        Route.createRoute("AAA2", null, null)
+                        Route.createRoute("AAA2", "2", null),
+                        Route.createRoute("AAA3", null, null)
                     )
                 )
                 .build()
@@ -74,10 +88,15 @@ fun main() {
     routeAppender.start()
     ctx.updateLoggers()
 
-    ThreadContext.put("threadName", "1")
-
     val logger = LogManager.getLogger("aaa")
-    logger.info("Hello")
+
+    logger.info("Hello-default")
+
+    ThreadContext.put("threadName", "1")
+    logger.info("Hello-1")
+
+    ThreadContext.put("threadName", "2")
+    logger.info("Hello-2")
 }
 
 fun main__() {

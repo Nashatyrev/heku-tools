@@ -1,35 +1,21 @@
 package tech.consensys.linea
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
-import io.libp2p.core.ChannelVisitor
-import io.libp2p.etc.util.netty.LoggingHandlerShort
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.handler.logging.LogLevel
-import kotlinx.datetime.Clock
-import kotlinx.datetime.toJavaInstant
 import org.apache.logging.log4j.Level
 import tech.consensys.linea.execution.toDelayer
 import tech.consensys.linea.execution.withDelay
-import tech.consensys.linea.execution.withLogging
 import tech.consensys.linea.util.async.MinimizedExecutorFactory
 import tech.consensys.linea.util.libp2p.ConnectionsTracker
 import tech.consensys.linea.util.netty.SimpleLatencySimHandler
 import tech.pegasys.heku.node.HekuNodeBuilder
 import tech.pegasys.heku.util.config.logging.RawFilter
-import tech.pegasys.heku.util.config.startLogging
 import tech.pegasys.heku.util.ext.toBytes
 import tech.pegasys.heku.util.ext.toUInt64
 import tech.pegasys.heku.util.generatePrivateKeyFromSeed
-import tech.pegasys.heku.util.setDefaultExceptionHandler
 import tech.pegasys.teku.BeaconNodeFacade
-import tech.pegasys.teku.TekuFacade
 import tech.pegasys.teku.bls.BLSKeyPair
 import tech.pegasys.teku.cli.subcommand.internal.validator.tools.EncryptedKeystoreWriter
-import tech.pegasys.teku.config.TekuConfiguration
 import tech.pegasys.teku.ethereum.executionlayer.BuilderCircuitBreaker
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManagerStub
-import tech.pegasys.teku.infrastructure.async.ExecutorServiceFactory
 import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.networking.eth2.gossip.GossipFailureLogger
 import tech.pegasys.teku.service.serviceutils.ServiceConfig
@@ -43,13 +29,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
-import java.text.SimpleDateFormat
-import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Optional
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.milliseconds
@@ -62,7 +42,7 @@ class RunBootNode {
             val lineaTeku = LineaTeku()
 //            lineaTeku.createGenesisIfRequired()
             lineaTeku.resetWithNewGenesis()
-            lineaTeku.runBootNode(0, 0 until 32)
+            lineaTeku.createBootNode(0, 0 until 32)
         }
     }
 }
@@ -72,7 +52,7 @@ class RunNode {
 
         @JvmStatic
         fun main(vararg args: String) {
-            LineaTeku().runNode(1, 32 until 64)
+            LineaTeku().createNode(1, 32 until 64)
         }
     }
 }
@@ -82,7 +62,7 @@ class RunClientNode {
 
         @JvmStatic
         fun main(vararg args: String) {
-            LineaTeku().runNode(2, 48 until 64)
+            LineaTeku().createNode(2, 48 until 64)
         }
     }
 }
@@ -106,8 +86,8 @@ class LineaTeku(
 
     val workDir: String = "./work.dir/linea",
     val advertisedIp: String = "10.150.1.122",
-    val connectionLatency: Duration = 1.milliseconds,
-    val executionDelay: Duration = 250.milliseconds,
+    val connectionLatency: Duration = 0.milliseconds,
+    val executionDelay: Duration = 0.milliseconds,
 ) {
 
     val genesisFile = "$workDir/genesis.ssz"
@@ -133,35 +113,32 @@ class LineaTeku(
         writeGenesis()
     }
 
-    fun runBootNode(
+    fun createBootNode(
         number: Int,
         validators: IntRange
-    ): BeaconNodeFacade {
-        val bootNode = runNode(number, validatorKeys.slice(validators), null)
-        File(bootnodeEnrFile).writeText(
-            bootNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.enr.orElseThrow()
-        )
-
-        println("BootNode Id: " + bootNode.beaconChainService.orElseThrow().beaconChainController.p2pNetwork.nodeId)
+    ): HekuNodeBuilder {
+        val bootNode = createNode(number, validatorKeys.slice(validators), null)
+        val enr = bootNode.getEnr()
+        File(bootnodeEnrFile).writeText(enr)
 
         return bootNode
     }
 
-    fun runNode(
+    fun createNode(
         number: Int,
         validators: IntRange
-    ): BeaconNodeFacade {
+    ): HekuNodeBuilder {
         val bootnodeEnr = File(bootnodeEnrFile).readText()
-        return runNode(number, validatorKeys.slice(validators), bootnodeEnr)
+        return createNode(number, validatorKeys.slice(validators), bootnodeEnr)
     }
 
-    fun runNode(
+    fun createNode(
         number: Int,
         validators: List<BLSKeyPair>,
         bootnodeEnr: String?,
         consoleOn: Boolean = true,
         connectionsTracker: ConnectionsTracker? = null
-    ): BeaconNodeFacade {
+    ): HekuNodeBuilder {
         val port = 9004 + number
         val dataPath = "$workDir/node-$number"
         val validatorKeysPath = "$dataPath/keys"
@@ -235,7 +212,7 @@ class LineaTeku(
             }
 
             with(loggingConfig) {
-                logConfigBuilder.logLevel(Level.INFO)
+                logConfigBuilder.logLevel(Level.DEBUG)
                 consoleStatusLevel = if (consoleOn) Level.INFO else Level.OFF
                 addFilter(
                     // Filter entries: WARN  - Failed to publish sync committee message(s) for slot 3 because no peers were available on the required gossip topic
@@ -249,9 +226,10 @@ class LineaTeku(
 
         }
 
-        val beaconNodes = HekuNodeBuilder.buildAndStartAll(listOf(nodeBuilder))
-
-        return beaconNodes.first().beaconNode
+//        val beaconNodes = HekuNodeBuilder.buildAndStartAll(listOf(nodeBuilder))
+//
+//        return beaconNodes.first().beaconNode
+        return nodeBuilder
     }
 
     private fun createStubExecutionManager(serviceConfig: ServiceConfig) =

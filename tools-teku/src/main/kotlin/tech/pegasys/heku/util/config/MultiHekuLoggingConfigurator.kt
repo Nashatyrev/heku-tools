@@ -13,6 +13,7 @@ import org.apache.logging.log4j.core.appender.routing.Route
 import org.apache.logging.log4j.core.appender.routing.Routes
 import org.apache.logging.log4j.core.appender.routing.RoutingAppender
 import org.apache.logging.log4j.core.config.AbstractConfiguration
+import org.apache.logging.log4j.core.config.LoggerConfig
 import org.apache.logging.log4j.core.filter.LevelRangeFilter
 import org.apache.logging.log4j.core.layout.PatternLayout
 import org.apache.logging.log4j.core.pattern.RegexReplacement
@@ -46,6 +47,10 @@ class MultiHekuLoggingConfigurator {
 
         addAppenderToRootLogger(ctxConfiguration, consoleRouteAppender)
         addAppenderToRootLogger(ctxConfiguration, fileRouteAppender)
+
+        val commonConfig = configs.first() // TODO
+        setCustomLevels(ctxConfiguration, commonConfig)
+        addFilters(ctxConfiguration, commonConfig)
     }
 
     private fun addAppenderToRootLogger(configuration: AbstractConfiguration, appender: Appender) {
@@ -148,4 +153,28 @@ class MultiHekuLoggingConfigurator {
         return fileAppender
     }
 
+    private fun setCustomLevels(configuration: AbstractConfiguration, configEx: LoggingConfigExt) {
+        for ((loggerName, level) in configEx.loggerLevels) {
+            var loggerConfig = configuration.getLoggerConfig(loggerName)
+            if (loggerName != loggerConfig.name) {
+                loggerConfig = LoggerConfig(loggerName, level, true)
+                configuration.addLogger(loggerName, loggerConfig)
+            }
+            loggerConfig.level = level
+        }
+    }
+
+    private fun addFilters(configuration: AbstractConfiguration, configEx: LoggingConfigExt) {
+        for ((loggerName, second) in configEx.filters) {
+            val loggerOrParentConfig = configuration.getLoggerConfig(loggerName)
+            val loggerConfig: LoggerConfig
+            if (loggerOrParentConfig.name == loggerName) {
+                loggerConfig = loggerOrParentConfig
+            } else {
+                loggerConfig = LoggerConfig(loggerName, loggerOrParentConfig.level, true)
+                configuration.addLogger(loggerName, loggerConfig)
+            }
+            loggerConfig.addFilter(second)
+        }
+    }
 }
