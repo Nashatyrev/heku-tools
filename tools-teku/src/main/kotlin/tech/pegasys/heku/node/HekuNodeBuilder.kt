@@ -30,6 +30,7 @@ class HekuNodeBuilder {
     val tekuConfigBuilder = TekuConfiguration.builder()
 
     val libp2pNetworkHandlersBuilder = DebugBuilder()
+    var libp2pGossipHandler: ChannelHandler? = null
 
     var loggingConfig = LoggingConfigExt.createDefault()
 
@@ -45,6 +46,10 @@ class HekuNodeBuilder {
             val libP2PNetworkBuilder = HekuLibP2PNetworkBuilder().apply {
                 hostBuilderPostModifier = { hostBuilder ->
                     hostBuilder.debug.addAll(libp2pNetworkHandlersBuilder)
+                }
+                libp2pGossipHandler?.also {
+                    libP2PGossipNetworkBuilder
+                        .debugGossipHandler(it)
                 }
             }
 
@@ -118,7 +123,7 @@ class HekuNodeBuilder {
 
     companion object {
 
-        fun buildAndStartAll(hekuBuilders: List<HekuNodeBuilder>): List<HekuNode> {
+        fun buildAll(hekuBuilders: List<HekuNodeBuilder>): List<HekuNode> {
             setDefaultExceptionHandler()
 
             val configs = hekuBuilders
@@ -137,13 +142,20 @@ class HekuNodeBuilder {
             MultiHekuLoggingConfigurator().startLogging(logConfigs)
 
             return configs.map {
-                val startupRunner = it.serviceConfig.asyncRunnerFactory.create("startup", 1)
-                val nodeFuture = startupRunner.runAsync( ExceptionThrowingSupplier {
-                    val beaconNode = BeaconNode(it.tekuConfig, it.serviceConfig)
-                    beaconNode.start()
-                    beaconNode
-                })
-                HekuNode(nodeFuture.join())
+                val startupRunner = it.serviceConfig.asyncRunnerFactory.create("init", 1)
+                val ret = startupRunner.runAsync( ExceptionThrowingSupplier {
+                    BeaconNode(it.tekuConfig, it.serviceConfig)
+                }).join()
+//                startupRunner.shutdown()  // TODO got RejectedExecutionException on startup
+                HekuNode(ret)
+            }
+        }
+
+        fun buildAndStartAll(hekuBuilders: List<HekuNodeBuilder>): List<HekuNode> {
+            val hekuNodes = buildAll(hekuBuilders)
+            return hekuNodes.map {
+                it.startOnNodeAsyncRunner().join()
+                it
             }
         }
 

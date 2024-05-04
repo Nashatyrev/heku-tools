@@ -25,11 +25,18 @@ class MinimizedExecutorFactory(
         threadPriority: Int
     ): ExecutorService {
         return if (maxThreads == 1) {
-            oneThreadExecutor
+//            oneThreadExecutor
+            createOneThreadExecutor(name)
         } else {
             executor
         }
     }
 
     override fun createScheduledExecutor(name: String): ScheduledExecutorService = executor
+
+    private fun createOneThreadExecutor(name: String): ExecutorService {
+        return Executors.newSingleThreadScheduledExecutor(
+            ThreadFactoryBuilder().setNameFormat("linea-sim-$factoryId-one-$name").build()
+        )
+    }
 }

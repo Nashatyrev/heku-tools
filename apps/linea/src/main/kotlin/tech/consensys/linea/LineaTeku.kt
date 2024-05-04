@@ -5,6 +5,7 @@ import tech.consensys.linea.execution.toDelayer
 import tech.consensys.linea.execution.withDelay
 import tech.consensys.linea.util.async.MinimizedExecutorFactory
 import tech.consensys.linea.util.libp2p.ConnectionsTracker
+import tech.consensys.linea.util.libp2p.GossipTracker
 import tech.consensys.linea.util.netty.SimpleLatencySimHandler
 import tech.pegasys.heku.node.HekuNodeBuilder
 import tech.pegasys.heku.util.config.logging.RawFilter
@@ -18,6 +19,7 @@ import tech.pegasys.teku.ethereum.executionlayer.BuilderCircuitBreaker
 import tech.pegasys.teku.ethereum.executionlayer.ExecutionLayerManagerStub
 import tech.pegasys.teku.infrastructure.unsigned.UInt64
 import tech.pegasys.teku.networking.eth2.gossip.GossipFailureLogger
+import tech.pegasys.teku.networking.p2p.libp2p.gossip.GossipHandler
 import tech.pegasys.teku.service.serviceutils.ServiceConfig
 import tech.pegasys.teku.spec.Spec
 import tech.pegasys.teku.spec.TestSpecFactory
@@ -30,6 +32,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Optional
+import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.milliseconds
@@ -146,7 +149,6 @@ class LineaTeku(
 
         writeValidatorKeys(validators, validatorKeysPath)
         val executorFactory = MinimizedExecutorFactory("$number", 4)
-        val delayExecutor = executorFactory.createScheduledExecutor("delayExecutor")
 
         val nodeBuilder = HekuNodeBuilder().apply {
             tekuConfigBuilder
@@ -161,8 +163,8 @@ class LineaTeku(
                 }
                 .discovery {
                     it
-//                        .maxPeers(8)
-//                        .minPeers(6)
+                        .maxPeers(32)
+                        .minPeers(6)
                         .isDiscoveryEnabled(true)
                         .siteLocalAddressesEnabled(true)
                 }
@@ -210,6 +212,7 @@ class LineaTeku(
             if (connectionsTracker != null) {
                 libp2pNetworkHandlersBuilder.afterSecureHandler.addHandler(connectionsTracker)
             }
+            libp2pGossipHandler = GossipTracker()
 
             with(loggingConfig) {
                 logConfigBuilder.logLevel(Level.DEBUG)
@@ -220,9 +223,11 @@ class LineaTeku(
                     GossipFailureLogger::class.qualifiedName!!,
                     RawFilter.excludeByMessage("because no peers were available on the required gossip topic")
                 )
+                addCustomLevel(GossipHandler::class, Level.TRACE)
             }
 
-//            executionServiceFactory = executorFactory
+            isSyncChannels = true
+            executionServiceFactory = executorFactory
 
         }
 
