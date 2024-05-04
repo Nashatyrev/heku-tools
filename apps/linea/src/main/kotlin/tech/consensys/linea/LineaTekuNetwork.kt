@@ -28,7 +28,7 @@ class LineaTekuNetwork(
             }
     },
     ),
-    val nodeCount: Int = 2
+    val nodeCount: Int = 32
 ) {
     val connectionsTracker = ConnectionsTracker()
 
@@ -44,7 +44,13 @@ class LineaTekuNetwork(
             }
         val allNodeBuilders = listOf(bootNode) + otherNodes
 
-        val allNodes = HekuNodeBuilder.buildAndStartAll(allNodeBuilders)
+        val hekuNodes = HekuNodeBuilder.buildAll(allNodeBuilders)
+
+        hekuNodes.forEach {
+            it.startOnNodeAsyncRunner().join()
+
+            Thread.sleep(5 * 1000)
+        }
 
         while (true) {
             Thread.sleep(3000)

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.core.Appender
 import org.apache.logging.log4j.core.Layout
 import org.apache.logging.log4j.core.LoggerContext
+import org.apache.logging.log4j.core.appender.AsyncAppender
 import org.apache.logging.log4j.core.appender.ConsoleAppender
 import org.apache.logging.log4j.core.appender.RollingFileAppender
 import org.apache.logging.log4j.core.appender.rolling.CompositeTriggeringPolicy
@@ -13,6 +14,8 @@ import org.apache.logging.log4j.core.appender.routing.Route
 import org.apache.logging.log4j.core.appender.routing.Routes
 import org.apache.logging.log4j.core.appender.routing.RoutingAppender
 import org.apache.logging.log4j.core.config.AbstractConfiguration
+import org.apache.logging.log4j.core.config.AppenderRef
+import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.LoggerConfig
 import org.apache.logging.log4j.core.filter.LevelRangeFilter
 import org.apache.logging.log4j.core.layout.PatternLayout
@@ -30,6 +33,8 @@ class MultiHekuLoggingConfigurator {
     }
 
     fun startLogging(configs: List<LoggingConfigExt>) {
+        val commonConfig = configs.first() // TODO
+
         val ctx = LogManager.getContext(false) as LoggerContext
         val ctxConfiguration = ctx.configuration as AbstractConfiguration
 
@@ -39,16 +44,32 @@ class MultiHekuLoggingConfigurator {
         val consoleAppenders = configs
             .withIndex()
             .map { createConsoleAppender(ctxConfiguration, it.value, it.index.toString()) }
-        val defaultConsoleAppender = createConsoleAppender(ctxConfiguration, "??", Level.DEBUG, true)
+        val defaultConsoleAppender = createConsoleAppender(ctxConfiguration, "??", Level.INFO, true)
 
         val consoleRouteAppender =
             createRoutingAppender(ctxConfiguration, consoleAppenders, "CONSOLE_ROUTER", defaultConsoleAppender)
         val fileRouteAppender = createRoutingAppender(ctxConfiguration, fileAppenders, "FILE_ROUTER")
 
-        addAppenderToRootLogger(ctxConfiguration, consoleRouteAppender)
-        addAppenderToRootLogger(ctxConfiguration, fileRouteAppender)
+        val asyncAppender = AsyncAppender.newBuilder()
+            .setName("ASYNC")
+            .setAppenderRefs(
+                arrayOf(
+                    AppenderRef.createAppenderRef("CONSOLE_ROUTER", null, null),
+                    AppenderRef.createAppenderRef("FILE_ROUTER", Level.TRACE, null)
+                )
+            )
+            .setConfiguration(ctxConfiguration)
+            .build()
+        asyncAppender.start()
 
-        val commonConfig = configs.first() // TODO
+        addAppenderToRootLogger(ctxConfiguration, asyncAppender)
+//        addAppenderToRootLogger(ctxConfiguration, consoleRouteAppender)
+//        addAppenderToRootLogger(ctxConfiguration, fileRouteAppender)
+
+
+        commonConfig.logConfig.getLogLevel().ifPresent { level: Level ->
+            Configurator.setAllLevels("", level)
+        }
         setCustomLevels(ctxConfiguration, commonConfig)
         addFilters(ctxConfiguration, commonConfig)
     }
@@ -83,6 +104,7 @@ class MultiHekuLoggingConfigurator {
             .build()
 
         ret.start()
+        l4jConfig.addAppender(ret)
         return ret;
     }
 

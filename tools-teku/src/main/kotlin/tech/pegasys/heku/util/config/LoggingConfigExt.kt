@@ -21,6 +21,7 @@ import tech.pegasys.teku.networking.p2p.libp2p.LibP2PPeer
 import tech.pegasys.teku.statetransition.forkchoice.ForkChoiceNotifierImpl
 import tech.pegasys.teku.statetransition.forkchoice.ForkChoiceUpdateData
 import kotlin.io.path.absolutePathString
+import kotlin.reflect.KClass
 
 val NOISY_DEBUG_GENERAL_LOGGERS = listOf(
     "org.quartz",
@@ -89,6 +90,10 @@ class LoggingConfigExt {
     fun addFilter(logger: String, filter: Filter) {
         filters += logger to filter
     }
+
+    fun addCustomLevel(kClass: KClass<*>, level: Level) =
+        addCustomLevel(kClass.qualifiedName!!, level)
+
 
     fun addCustomLevel(logger: String, level: Level) {
         loggerLevels += logger to level
